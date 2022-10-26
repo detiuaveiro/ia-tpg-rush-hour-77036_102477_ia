@@ -35,6 +35,8 @@ class Domain(SearchDomain):
                     vector = Coordinates(0, i - piece_coords[0].y) if change_direction else Coordinates(0, i - piece_coords[-1].y)
 
                     actlist.append(piece, vector)
+            
+            return actlist
 
 
 
