@@ -36,7 +36,7 @@ class Domain(SearchDomain):
 
                     actlist.append(piece, vector)
             
-            return actlist
+        return actlist
 
 
 
