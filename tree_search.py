@@ -45,20 +45,19 @@ class SearchDomain(ABC):
 
     # test if the given "goal" is satisfied in "state"
     @abstractmethod
-    def satisfies(self, state, goal):
+    def satisfies(self, state):
         pass
 
 
 # Problemas concretos a resolver
 # dentro de um determinado dominio
 class SearchProblem:
-    def __init__(self, domain, initial, goal):
+    def __init__(self, domain, initial):
         self.domain = domain
         self.initial = initial
-        self.goal = goal
 
     def goal_test(self, state):
-        return self.domain.satisfies(state, self.goal)
+        return self.domain.satisfies(state)
 
 
 # Nos de uma arvore de pesquisa
@@ -151,12 +150,12 @@ class SearchTree:
                     # Para cada ação, determina-se o resultado, isto é, o novo nó
                     newstate = self.problem.domain.result(node.state, a)
 
+                    if newstate is None:
+                        continue
+
                     # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
                     if not node.in_parent(newstate):
-                        newnode = SearchNode(newstate, node, node.depth + 1,
-                                             node.cost + self.problem.domain.cost(node.state, a),
-                                             self.problem.domain.heuristic(newstate, self.problem.goal),
-                                             a)
+                        newnode = SearchNode(newstate, node, node.depth + 1)                # CHANGES
 
                         # Determinar custo acumulado do novo nó e, se for maior ou igual do que os maiores nós até ao momento, adicionar a highest_cost_nodes
                         if self.highest_cost_nodes == [] or newnode.cost > self.highest_cost_nodes[0].cost:
