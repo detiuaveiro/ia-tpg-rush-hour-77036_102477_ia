@@ -25,6 +25,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
         solved = False
         level = 0
+        commands = []
 
         while True:
             try:
@@ -53,18 +54,17 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate cursor movements to complete level
                     game_map = Map(state.get("grid"))
                     cursor_coords = Coordinates(state.get("cursor")[0], state.get("cursor")[1])
-                    get_cursor_moves(moves , game_map, cursor_coords)
-                    #TODO: Calcular os comandos de cada move individualmente
-                    
+                    for move in moves[1:]:
+                        (game_map, new_commands) = get_commands(move, game_map, cursor_coords)
+                        commands += new_commands
+
                     solved = True
 
+                print(commands)
 
-
-
-                    await websocket.send(
-                        json.dumps({"cmd": "key", "key": key})
-                    )  # send key command to server - you must implement this send in the AI agent
-                    break
+                await websocket.send(
+                    json.dumps({"cmd": "key", "key": commands.pop(0)})
+                )  # send key command to server - you must implement this send in the AI agent
 
             except websockets.exceptions.ConnectionClosedOK:
                 print("Server has cleanly disconnected us")
@@ -73,45 +73,54 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
             # Next line is not needed for AI agent
             pygame.display.flip()
 
-def get_cursor_moves(moves, game_map, cursor_coords):
+
+def get_commands(move, game_map, cursor_coords):
     cursor_moves = []
 
-    for move in moves[1:]:
-        map_after_move = Map(move[1])
-        moved_piece = move[0]
-        piece_coords = game_map.piece_coordinates(moved_piece)
-        final_piece_coords = map_after_move.piece_coordinates(moved_piece)
+    map_after_move = Map(move[1])                                               # Estado do mapa no final do Move ser realizado
+    moved_piece = move[0]                                                       # Peça a ser movida
+    current_piece_coords = game_map.piece_coordinates(moved_piece)              # Coordenadas atuais da peça
+    final_piece_coords = map_after_move.piece_coordinates(moved_piece)          # Coordenadas finais da peça após o Move ser efetuado
 
-        # Mover cursor para posição onde a peça a mover se encontra inicialmente
-        if cursor_coords.x > piece_coords[0].x:
-            key = "a"
-        elif cursor_coords.x < piece_coords[0].x:
-            key = "d"
-        elif cursor_coords.y > piece_coords[0].y:
-            key = "s"
-        elif cursor_coords.y < piece_coords[0].y:
-            key = "w"
+    # Mover cursor para posição inicial da peça
+    (cursor_coords, moves) = move_cursor(cursor_coords, current_piece_coords)
+    cursor_moves += moves
+
+    # Mover a peça da posição inicial para a posição final
+    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords)
+    cursor_moves += moves
+
+    return map_after_move, cursor_moves
+
+
+# Move the cursor from an initial position to a final position, given by coordinates
+def move_cursor(cursor_coords, final_coords):
+    commands = []
+
+    while cursor_coords != final_coords:
+        if cursor_coords.x > final_coords[0].x:
+            commands.append("a")
+            cursor_coords.x -= 1
+        elif cursor_coords.x < final_coords[0].x:
+            commands.append("d")
+            cursor_coords.x += 1
+        elif cursor_coords.y > final_coords[0].y:
+            commands.append("w")
+            cursor_coords.y += 1
+        elif cursor_coords.y < final_coords[0].y:
+            commands.append("s")
+            cursor_coords.y -= 1
         else:
-            key = " "
+            commands.append(" ")
+            break
 
-        # Mover a peça para as coordenadas correspondentes ao estado da ação recebida
-        if cursor_coords.x > final_piece_coords[0].x:
-            key = "a"
-        elif cursor_coords.x < final_piece_coords[0].x:
-            key = "d"
-        elif cursor_coords.y > final_piece_coords[0].y:
-            key = "s"
-        elif cursor_coords.y < final_piece_coords[0].y:
-            key = "w"
-        else:
-            key = " "
-
+    return cursor_coords, commands
 
 # DO NOT CHANGE THE LINES BELLOW
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
 loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
-PORT = os.environ.get("PORT", "8080")
+PORT = os.environ.get("PORT", "8000")
 NAME = os.environ.get("NAME", getpass.getuser())
 loop.run_until_complete(agent_loop(f"{SERVER}:{PORT}", NAME))
