@@ -23,6 +23,9 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         # Receive information about static game properties
         await websocket.send(json.dumps({"cmd": "join", "name": agent_name}))
 
+        solved = False
+        level = 0
+
         while True:
             try:
                 state = json.loads(
@@ -36,45 +39,26 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 print(state.get("grid"))                        # String da grelha
                 # print(state.get("selected"))                  # Peça seleccionada
 
-                game_map = Map(state.get("grid"))
-                initial_state = ("A", state.get("grid"))
-                cursor_coords = Coordinates(state.get("cursor")[0], state.get("cursor")[1])
-                strategy = "breadth"
+                if level != state.get("level"):
+                    solved = False
 
-                problem = tree_search.SearchProblem(domain.Domain(), initial_state)
-                tree = tree_search.SearchTree(problem, strategy)
+                if not solved:
+                    # Calculate map movements to complete the level
+                    initial_state = ("A", state.get("grid"))
+                    strategy = "breadth"
+                    problem = tree_search.SearchProblem(domain.Domain(), initial_state)
+                    tree = tree_search.SearchTree(problem, strategy)
+                    moves = tree.search()
 
-                moves = tree.search()
+                    # Calculate cursor movements to complete level
+                    game_map = Map(state.get("grid"))
+                    cursor_coords = Coordinates(state.get("cursor")[0], state.get("cursor")[1])
+                    get_cursor_moves(moves , game_map, cursor_coords)
+                    #TODO: Calcular os comandos de cada move individualmente
+                    
+                    solved = True
 
-                for move in moves[1:]:
-                    map_after_move = Map(move[1])
-                    moved_piece = move[0]
-                    piece_coords = game_map.piece_coordinates(moved_piece)
-                    final_piece_coords = map_after_move.piece_coordinates(moved_piece)
 
-                    # Mover cursor para posição onde a peça a mover se encontra inicialmente
-                    if cursor_coords.x > piece_coords[0].x:
-                        key = "a"
-                    elif cursor_coords.x < piece_coords[0].x:
-                        key = "d"
-                    elif cursor_coords.y > piece_coords[0].y:
-                        key = "s"
-                    elif cursor_coords.y < piece_coords[0].y:
-                        key = "w"
-                    else:
-                        key = " "
-
-                    # Mover a peça para as coordenadas correspondentes ao estado da ação recebida
-                    if cursor_coords.x > final_piece_coords[0].x:
-                        key = "a"
-                    elif cursor_coords.x < final_piece_coords[0].x:
-                        key = "d"
-                    elif cursor_coords.y > final_piece_coords[0].y:
-                        key = "s"
-                    elif cursor_coords.y < final_piece_coords[0].y:
-                        key = "w"
-                    else:
-                        key = " "
 
 
                     await websocket.send(
@@ -88,6 +72,39 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
             # Next line is not needed for AI agent
             pygame.display.flip()
+
+def get_cursor_moves(moves, game_map, cursor_coords):
+    cursor_moves = []
+
+    for move in moves[1:]:
+        map_after_move = Map(move[1])
+        moved_piece = move[0]
+        piece_coords = game_map.piece_coordinates(moved_piece)
+        final_piece_coords = map_after_move.piece_coordinates(moved_piece)
+
+        # Mover cursor para posição onde a peça a mover se encontra inicialmente
+        if cursor_coords.x > piece_coords[0].x:
+            key = "a"
+        elif cursor_coords.x < piece_coords[0].x:
+            key = "d"
+        elif cursor_coords.y > piece_coords[0].y:
+            key = "s"
+        elif cursor_coords.y < piece_coords[0].y:
+            key = "w"
+        else:
+            key = " "
+
+        # Mover a peça para as coordenadas correspondentes ao estado da ação recebida
+        if cursor_coords.x > final_piece_coords[0].x:
+            key = "a"
+        elif cursor_coords.x < final_piece_coords[0].x:
+            key = "d"
+        elif cursor_coords.y > final_piece_coords[0].y:
+            key = "s"
+        elif cursor_coords.y < final_piece_coords[0].y:
+            key = "w"
+        else:
+            key = " "
 
 
 # DO NOT CHANGE THE LINES BELLOW
