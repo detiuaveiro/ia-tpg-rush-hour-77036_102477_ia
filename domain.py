@@ -7,7 +7,6 @@ class Domain(SearchDomain):
         pass
 
     def actions(self, state):
-        print(state)
         map_grid = Map(state[1])
         pieces = set([a[2] for a in map_grid.coordinates])
 
@@ -43,11 +42,31 @@ class Domain(SearchDomain):
         current_map = Map(state[1])
         (piece, movement_vector) = action
 
-        try:
-            current_map.move(piece, movement_vector)
-            return piece, current_map.__str__()
-        except MapException:
-            return None
+        if movement_vector.x > 0:
+            for i in range(1, movement_vector.x+1):
+                try:
+                    current_map.move(piece, Coordinates(1, 0))
+                except MapException:
+                    return None
+        elif movement_vector.x < 0:
+            for i in range(-1, movement_vector.x-1, -1):
+                try:
+                    current_map.move(piece, Coordinates(-1, 0))
+                except MapException:
+                    return None
+        elif movement_vector.y > 0:
+            for i in range(1, movement_vector.y+1):
+                try:
+                    current_map.move(piece, Coordinates(0, 1))
+                except MapException:
+                    return None
+        elif movement_vector.y < 0:
+            for i in range(-1, movement_vector.y-1, -1):
+                try:
+                    current_map.move(piece, Coordinates(0, -1))
+                except MapException:
+                    return None
+        return piece, current_map.__str__()
 
     def cost(self, state, action):
         pass
@@ -75,16 +94,22 @@ def print_grid(state):
         i += 1
     return f"{raw}"
 
-"""
 d = Domain()
-grid = "02 ooooBoooooBoAAooBooooooooooooooooooo 14"
+grid = ('A', '04 oooooHoxCCoHAAoGoooFoGoooFDDxooooooo 302')
+print("Initial Grid")
+print(print_grid(grid[1]))
 actList = d.actions(grid)
 print(actList)
 
 for a in actList:
-    print("Piece" + a[0])
-    newGrid = d.result(grid, a)
-    print(print_grid(newGrid))
+    print("\nPiece " + a[0])
+    try:
+        piece, newGrid = d.result(grid, a)
+        print(a)
+        print(print_grid(newGrid))
+    except:
+        print("None")
+
 
 '''
 o o o o B o 
@@ -94,5 +119,3 @@ o o o o o o
 o o o o o o
 o o o o o o
 '''
-
-"""
