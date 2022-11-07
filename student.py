@@ -8,8 +8,7 @@ import os
 import pygame
 import websockets
 import tree_search
-import domain
-from domain import print_grid
+from domain import print_grid, func_satisfies, func_result, func_actions, func_cost, func_heuristic
 from common import Map, MapException, Coordinates
 
 pygame.init()
@@ -27,6 +26,11 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         solved = False
         level = 0
         commands = []
+        domain = ( lambda s : func_actions(s),
+                              lambda s,a : func_result(s,a),
+                              lambda s,a : func_cost(s,a),
+                              lambda s,goal : func_heuristic(s,goal),
+                              lambda s : func_satisfies(s) )
 
         while True:
             try:
@@ -47,7 +51,8 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate map movements to complete the level
                     initial_state = ("A", state.get("grid"))
                     strategy = "breadth"
-                    problem = tree_search.SearchProblem(domain.Domain(), initial_state)
+                    ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
+                    problem = (domain, initial_state)
                     tree = tree_search.SearchTree(problem, strategy)
                     moves = tree.search()
                     print(moves)
@@ -66,6 +71,11 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     level += 1
                     continue
 
+                '''
+                if (len(commands) == 0):
+                    solved = False
+                    break
+                '''
 
                 await websocket.send(
                     json.dumps({"cmd": "key", "key": commands.pop(0)})
