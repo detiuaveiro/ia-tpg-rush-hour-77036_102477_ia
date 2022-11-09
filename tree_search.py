@@ -173,42 +173,38 @@ class SearchTree:
             for a in self.problem[0][0](node[0]):                                       # for a in self.problem.domain.actions(node.state):
                 # Para cada ação, determina-se o resultado, isto é, o novo nó
                 newstate = self.problem[0][1](node[0], a)                               # newstate = self.problem.domain.result(node.state, a)
-
-                if newstate is None:
-                    continue
-
                 # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
-                if not self.in_parent(node, newstate):
-                    # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
-                    if newstate not in self.get_path(node):
-                        #newnode = SearchNode(newstate, node, node.depth + 1)
-                        newnode = (newstate, nodeID, node[2] + 1, 0, 0)
+                # if not self.in_parent(node, newstate):
+                # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
+                if newstate not in self.get_path(node):
+                    #newnode = SearchNode(newstate, node, node.depth + 1)
+                    newnode = (newstate, nodeID, node[2] + 1, 0, 0)
 
-                        '''
-                        # Determinar custo acumulado do novo nó e, se for maior ou igual do que os maiores nós até ao momento, adicionar a highest_cost_nodes
-                        if self.highest_cost_nodes == [] or newnode.cost > self.highest_cost_nodes[0].cost:
-                            self.highest_cost_nodes = [newnode]
-                        elif newnode.cost == self.highest_cost_nodes[0].cost:
-                            self.highest_cost_nodes.append(newnode)
-                        '''
+                    '''
+                    # Determinar custo acumulado do novo nó e, se for maior ou igual do que os maiores nós até ao momento, adicionar a highest_cost_nodes
+                    if self.highest_cost_nodes == [] or newnode.cost > self.highest_cost_nodes[0].cost:
+                        self.highest_cost_nodes = [newnode]
+                    elif newnode.cost == self.highest_cost_nodes[0].cost:
+                        self.highest_cost_nodes.append(newnode)
+                    '''
 
-                        '''
-                        if newstate in [self.all_nodes[id][0] for id in self.open_nodes] or newstate in [
-                            self.all_nodes[id][0] for id in self.closed_nodes]:
-                            # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
-                            state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0] == newstate][0]
+                    '''
+                    if newstate in [self.all_nodes[id][0] for id in self.open_nodes] or newstate in [
+                        self.all_nodes[id][0] for id in self.closed_nodes]:
+                        # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
+                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0] == newstate][0]
 
-                            if newnode[2] < self.all_nodes[state_id][2]:
-                                # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
-                                self.all_nodes[state_id] = newnode
-                        else:
-                            # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
-                            lnewnodes.append(len(self.all_nodes))
-                            self.all_nodes.append(newnode)
-                        '''
-
+                        if newnode[2] < self.all_nodes[state_id][2]:
+                            # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
+                            self.all_nodes[state_id] = newnode
+                    else:
+                        # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
                         lnewnodes.append(len(self.all_nodes))
                         self.all_nodes.append(newnode)
+                    '''
+
+                    lnewnodes.append(len(self.all_nodes))
+                    self.all_nodes.append(newnode)
 
             self.add_to_open(lnewnodes)
 

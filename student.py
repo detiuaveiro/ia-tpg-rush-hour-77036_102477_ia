@@ -3,17 +3,14 @@ import asyncio
 import getpass
 import json
 import os
-
+import time
 # Next 4 lines are not needed for AI agents, please remove them from your code!
-import pygame
 import websockets
 import tree_search
 from domain import print_grid, func_satisfies, func_result, func_actions, func_cost, func_heuristic
 from common import Map, MapException, Coordinates
+from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win
 
-pygame.init()
-program_icon = pygame.image.load("data/icon2.png")
-pygame.display.set_icon(program_icon)
 
 
 async def agent_loop(server_address="localhost:8000", agent_name="student"):
@@ -31,6 +28,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                               lambda s,a : func_cost(s,a),
                               lambda s,goal : func_heuristic(s,goal),
                               lambda s : func_satisfies(s) )
+        tf = 0
 
         while True:
             try:
@@ -41,41 +39,55 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 
                 print(state.get("cursor"))                      # Coordenadas do cursor (x,y)
                 print(state.get("grid"))                        # String da grelha
+                print(state.get("game_speed"))
                 # print(state.get("selected"))                  # Peça seleccionada
 
                 if level != state.get("level"):
                     solved = False
                     commands = []
+                    tf = 0
 
                 if not solved:
                     # Calculate map movements to complete the level
-                    initial_state = ("A", state.get("grid"))
+                    initial_state = ("A", state.get("grid").split(" ")[1])
                     strategy = "breadth"
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
+                    t0 = time.process_time()
+
                     problem = (domain, initial_state)
                     tree = tree_search.SearchTree(problem, strategy)
                     moves = tree.search()
+
+                    print(f"Time for tree search: {time.process_time()-t0}")
                     print(moves)
 
                     # Calculate cursor movements to complete level
-                    game_map = Map(state.get("grid"))
-                    cursor_coords = Coordinates(state.get("cursor")[0], state.get("cursor")[1])
+                    game_map = create_map(state.get("grid").split(" ")[1])
+                    cursor_coords = (state.get("cursor")[0], state.get("cursor")[1])
                     for move in moves[1:]:
                         print(print_grid(move[1]))
                         game_map, new_commands, cursor_coords = await get_commands(move, game_map, cursor_coords)
                         commands += new_commands
+
+                    tf = time.process_time() - t0
+                    tf = tf*10
                     
+                    print(f"Time to calculate moves: {tf}")
                     print(commands)
 
                     solved = True
                     level += 1
-                    continue
 
                 '''
                 if (len(commands) == 0):
                     solved = False
                     break
                 '''
+
+                if tf > 1:
+                    tf -= 1
+                    continue
+
 
                 await websocket.send(
                     json.dumps({"cmd": "key", "key": commands.pop(0)})
@@ -89,39 +101,39 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 async def get_commands(move, game_map, cursor_coords):
     cursor_moves = []
 
-    map_after_move = Map(move[1])                                               # Estado do mapa no final do Move ser realizado
+    map_after_move = create_map(move[1])                                               # Estado do mapa no final do Move ser realizado
     moved_piece = move[0]                                                       # Peça a ser movida
-    current_piece_coords = game_map.piece_coordinates(moved_piece)              # Coordenadas atuais da peça
-    final_piece_coords = map_after_move.piece_coordinates(moved_piece)          # Coordenadas finais da peça após o Move ser efetuado
+    current_piece_coords = piece_coordinates(game_map,moved_piece)              # Coordenadas atuais da peça
+    final_piece_coords = piece_coordinates(map_after_move,moved_piece)          # Coordenadas finais da peça após o Move ser efetuado
 
     # Mover cursor para posição inicial da peça
-    (cursor_coords, moves) = await move_cursor(cursor_coords, current_piece_coords)
+    (cursor_coords, moves) = move_cursor(cursor_coords, current_piece_coords)
     cursor_moves += moves
 
     # Mover a peça da posição inicial para a posição final
-    (cursor_coords, moves) = await move_cursor(cursor_coords, final_piece_coords)
+    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords)
     cursor_moves += moves
 
     return map_after_move, cursor_moves, cursor_coords
 
 
 # Move the cursor from an initial position to a final position, given by coordinates
-async def move_cursor(cursor_coords, final_coords):
+def move_cursor(cursor_coords, final_coords):
     commands = []
 
     while cursor_coords != final_coords:
-        if cursor_coords.x > final_coords[0].x:
+        if cursor_coords[0] > final_coords[0][0]:
             commands.append("a")
-            cursor_coords.x -= 1
-        elif cursor_coords.x < final_coords[0].x:
+            cursor_coords = (cursor_coords[0]-1, cursor_coords[1])
+        elif cursor_coords[0] < final_coords[0][0]:
             commands.append("d")
-            cursor_coords.x += 1
-        elif cursor_coords.y > final_coords[0].y:
+            cursor_coords = (cursor_coords[0]+1, cursor_coords[1])
+        elif cursor_coords[1] > final_coords[0][1]:
             commands.append("w")
-            cursor_coords.y -= 1
-        elif cursor_coords.y < final_coords[0].y:
+            cursor_coords = (cursor_coords[0], cursor_coords[1]-1)
+        elif cursor_coords[1] < final_coords[0][1]:
             commands.append("s")
-            cursor_coords.y += 1
+            cursor_coords = (cursor_coords[0], cursor_coords[1]+1)
         else:
             commands.append(" ")
             break
