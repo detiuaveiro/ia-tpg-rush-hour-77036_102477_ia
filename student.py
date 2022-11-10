@@ -21,35 +21,45 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         await websocket.send(json.dumps({"cmd": "join", "name": agent_name}))
 
         solved = False
-        level = 0
+        level = 1
         commands = []
         domain = ( lambda s : func_actions(s),
                               lambda s,a : func_result(s,a),
-                              lambda s,a : func_cost(s,a),
-                              lambda s,goal : func_heuristic(s,goal),
+                              lambda s,a, p : func_cost(s,a,p),
+                              lambda s,m,l,d : func_heuristic(s,m,l,d),
                               lambda s : func_satisfies(s) )
         tf = 0
+        prev = ""
 
         while True:
             try:
                 state = json.loads(
                     await websocket.recv()
                 )  # receive game update, this must be called timely or your game will get out of sync with the server
-
                 
                 print(state.get("cursor"))                      # Coordenadas do cursor (x,y)
                 print(state.get("grid"))                        # String da grelha
                 print(state.get("game_speed"))
                 # print(state.get("selected"))                  # Peça seleccionada
 
+                if prev != state.get("grid").split(" ")[1]:
+                    print("OH NO MY STATE CHANGED!")
+                    prev = state.get("grid").split(" ")[1]
+                    solved = False
+                    commands = []
+                    tf = 0
+                    level -= 1
+
+                '''
                 if level != state.get("level"):
                     solved = False
                     commands = []
                     tf = 0
-
+                '''
                 if not solved:
                     # Calculate map movements to complete the level
-                    initial_state = ("A", state.get("grid").split(" ")[1])
+                    initial_state \
+                        = ("A", state.get("grid").split(" ")[1])
                     strategy = "breadth"
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
@@ -88,11 +98,12 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     tf -= 1
                     continue
 
-
+                command = commands.pop(0)
                 await websocket.send(
-                    json.dumps({"cmd": "key", "key": commands.pop(0)})
+                    json.dumps({"cmd": "key", "key": command[0]})
                 )  # send key command to server - you must implement this send in the AI agent
 
+                prev = command[1]
             except websockets.exceptions.ConnectionClosedOK:
                 print("Server has cleanly disconnected us")
                 return
@@ -107,35 +118,43 @@ async def get_commands(move, game_map, cursor_coords):
     final_piece_coords = piece_coordinates(map_after_move,moved_piece)          # Coordenadas finais da peça após o Move ser efetuado
 
     # Mover cursor para posição inicial da peça
-    (cursor_coords, moves) = move_cursor(cursor_coords, current_piece_coords)
+    (cursor_coords, moves) = move_cursor(cursor_coords, current_piece_coords, game_map)
     cursor_moves += moves
 
     # Mover a peça da posição inicial para a posição final
-    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords)
+    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords, game_map, moved_piece, True)
     cursor_moves += moves
 
     return map_after_move, cursor_moves, cursor_coords
 
 
 # Move the cursor from an initial position to a final position, given by coordinates
-def move_cursor(cursor_coords, final_coords):
+def move_cursor(cursor_coords, final_coords, game_map, moved_piece=None, movingPiece=False):
     commands = []
 
     while cursor_coords != final_coords:
         if cursor_coords[0] > final_coords[0][0]:
-            commands.append("a")
+            if movingPiece:
+                game_map = move(game_map, moved_piece, (-1,0))
+            commands.append(("a", map_to_string(game_map)))
             cursor_coords = (cursor_coords[0]-1, cursor_coords[1])
         elif cursor_coords[0] < final_coords[0][0]:
-            commands.append("d")
+            if movingPiece:
+                game_map = move(game_map, moved_piece, (1,0))
+            commands.append(("d", map_to_string(game_map)))
             cursor_coords = (cursor_coords[0]+1, cursor_coords[1])
         elif cursor_coords[1] > final_coords[0][1]:
-            commands.append("w")
+            if movingPiece:
+                game_map = move(game_map, moved_piece, (0, -1))
+            commands.append(("w", map_to_string(game_map)))
             cursor_coords = (cursor_coords[0], cursor_coords[1]-1)
         elif cursor_coords[1] < final_coords[0][1]:
-            commands.append("s")
+            if movingPiece:
+                game_map = move(game_map, moved_piece, (0, 1))
+            commands.append(("s", map_to_string(game_map)))
             cursor_coords = (cursor_coords[0], cursor_coords[1]+1)
         else:
-            commands.append(" ")
+            commands.append((" ", map_to_string(game_map)))
             break
 
     return cursor_coords, commands

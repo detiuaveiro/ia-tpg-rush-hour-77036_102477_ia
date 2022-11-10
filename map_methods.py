@@ -52,10 +52,7 @@ def piece_coordinates(map, piece: str):
 
 def is_occupied(map, vector):
     """Checks if a given coordinate is occupied by a piece"""
-    if len([p for (x, y, p) in coordinates(map) if x == vector[0] and y == vector[1]]) > 0:
-        return True
-    else:
-        return False
+    return [p for (x, y, p) in coordinates(map) if x == vector[0] and y == vector[1]]
 
 
 def get(map, cursor):
@@ -102,6 +99,28 @@ def test_win(map):
     )
 
 
+# Move the cursor from an initial position to a final position, given by coordinates
+def move_cursor(cursor_coords, final_coords):
+    commands = []
+
+    while cursor_coords != final_coords:
+        if cursor_coords[0] > final_coords[0][0]:
+            commands.append("a")
+            cursor_coords = (cursor_coords[0]-1, cursor_coords[1])
+        elif cursor_coords[0] < final_coords[0][0]:
+            commands.append("d")
+            cursor_coords = (cursor_coords[0]+1, cursor_coords[1])
+        elif cursor_coords[1] > final_coords[0][1]:
+            commands.append("w")
+            cursor_coords = (cursor_coords[0], cursor_coords[1]-1)
+        elif cursor_coords[1] < final_coords[0][1]:
+            commands.append("s")
+            cursor_coords = (cursor_coords[0], cursor_coords[1]+1)
+        else:
+            commands.append(" ")
+            break
+
+    return cursor_coords, commands
 '''
 map = create_map("oooooHoxCCoHAAoGoooFoGoooFDDxooooooo")
 print(coordinates(map))

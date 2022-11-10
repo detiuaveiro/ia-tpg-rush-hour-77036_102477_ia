@@ -12,6 +12,7 @@
 #  Inteligência Artificial, 2014-2019
 
 from abc import ABC, abstractmethod
+from map_methods import piece_coordinates, create_map
 
 '''
 NOTA: Usando tuplos em vez das classes SearchDomain e SearchProblem, tem-se:
@@ -154,6 +155,7 @@ class SearchTree:
         while self.open_nodes != []:
             nodeID = self.open_nodes.pop(0)
             node = self.all_nodes[nodeID]
+            self.closed_nodes.append(nodeID)
             # Se o nó atual é o objetivo, terminar a pesquisa
             if self.problem[0][-1](node[0]):                                             # if self.problem.goal_test(node[0]):
                 self.solution = node
@@ -178,7 +180,12 @@ class SearchTree:
                 # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
                 if newstate not in self.get_path(node):
                     #newnode = SearchNode(newstate, node, node.depth + 1)
-                    newnode = (newstate, nodeID, node[2] + 1, 0, 0)
+                    map = create_map(newstate[1])
+                    a_coords = piece_coordinates(map, "A")
+                    newnode = (newstate, nodeID, node[2] + 1, node[-2] + self.problem[0][2](newstate, a, node[0]),
+                               self.problem[0][3](("A", newstate[1]),
+                               (map[0] - a_coords[-1][0],0),
+                                4, 0))
 
                     '''
                     # Determinar custo acumulado do novo nó e, se for maior ou igual do que os maiores nós até ao momento, adicionar a highest_cost_nodes
@@ -188,23 +195,20 @@ class SearchTree:
                         self.highest_cost_nodes.append(newnode)
                     '''
 
-                    '''
+
                     if newstate in [self.all_nodes[id][0] for id in self.open_nodes] or newstate in [
                         self.all_nodes[id][0] for id in self.closed_nodes]:
                         # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
                         state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0] == newstate][0]
 
-                        if newnode[2] < self.all_nodes[state_id][2]:
+                        if newnode[3] < self.all_nodes[state_id][3]:
                             # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
                             self.all_nodes[state_id] = newnode
                     else:
                         # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
                         lnewnodes.append(len(self.all_nodes))
                         self.all_nodes.append(newnode)
-                    '''
 
-                    lnewnodes.append(len(self.all_nodes))
-                    self.all_nodes.append(newnode)
 
             self.add_to_open(lnewnodes)
 
@@ -227,7 +231,7 @@ class SearchTree:
         elif self.strategy == 'a*':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic + n.cost)
-            self.open_nodes.sort(key=lambda n: n[2] + n[3])
+            self.open_nodes.sort(key=lambda n: self.all_nodes[n][3] + self.all_nodes[n][4])
 
     def in_parent(self, node, state):
         if node[1] is None:
