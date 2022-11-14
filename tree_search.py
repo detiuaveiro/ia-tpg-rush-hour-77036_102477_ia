@@ -196,10 +196,10 @@ class SearchTree:
                     '''
 
 
-                    if newstate in [self.all_nodes[id][0] for id in self.open_nodes] or newstate in [
-                        self.all_nodes[id][0] for id in self.closed_nodes]:
+                    if newstate[1] in [self.all_nodes[id][0][1] for id in self.open_nodes] or newstate[1] in [
+                        self.all_nodes[id][0][1] for id in self.closed_nodes]:
                         # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
-                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0] == newstate][0]
+                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0][1] == newstate[1]][0]
 
                         if newnode[3] < self.all_nodes[state_id][3]:
                             # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
