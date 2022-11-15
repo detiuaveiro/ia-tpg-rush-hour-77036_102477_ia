@@ -1,7 +1,7 @@
 from math import hypot
 from tree_search import *
 from common import Map, MapException, Coordinates
-from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win, is_occupied, move_cursor
+from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win, is_occupied, move_cursor, is_coord_occupied
 
 
 
@@ -12,52 +12,26 @@ def func_actions(state):
     actlist = []
     for piece in pieces:
         piece_coords = piece_coordinates(map_grid, piece)
-        piece_x_coords = [coord[0] for coord in piece_coords]
-        piece_y_coords = [coord[1] for coord in piece_coords]
-        orientation = "vertical" if len(set(piece_x_coords)) == 1 else "horizontal"
+
+        orientation = "vertical" if piece_coords[0][0] == piece_coords[1][0] else "horizontal"
+        #print("Piece: " + piece + " " + orientation)
 
         if orientation == "horizontal":
-            max_x = max(piece_x_coords)
-            min_x = min(piece_x_coords)
-
             # Andar para a frente
-            for i in range(max_x + 1, map_grid[0], 1):
-                if len(is_occupied(map_grid, (i, piece_coords[0][1]))) > 0:
-                    break
-
-                vector = (i - max_x, 0)
-
-                actlist.append((piece, vector))
+            if not piece_coords[-1][0] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0] + 1, piece_coords[0][1])):
+                actlist.append((piece, (1, 0)))
 
             # Andar para trás
-            for i in range(min_x - 1, -1, -1):
-                if len(is_occupied(map_grid, (i, piece_coords[0][1]))) > 0:
-                    break
-
-                vector = (i - min_x, 0)
-
-                actlist.append((piece, vector))
+            if not piece_coords[0][0] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0] - 1, piece_coords[0][1])):
+                actlist.append((piece, (-1, 0)))
         else:
-            max_y = max(piece_y_coords)
-            min_y = min(piece_y_coords)
-
             # Andar para baixo
-            for i in range(max_y + 1, map_grid[0], 1):
-                if len(is_occupied(map_grid, (piece_coords[0][0], i))) > 0:
-                    break
-
-                vector = (0, i - max_y)
-
-                actlist.append((piece, vector))
+            if not piece_coords[-1][1] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0], piece_coords[-1][1] + 1)):
+                actlist.append((piece, (0, 1)))
 
             # Andar para cima
-            for i in range(min_y - 1, -1, -1):
-                if len(is_occupied(map_grid, (piece_coords[0][0], i))) > 0:
-                    break
-
-                vector = (0, i - min_y)
-
-                actlist.append((piece, vector))
+            if not piece_coords[0][1] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0], piece_coords[0][1] - 1)):
+                actlist.append((piece, (0, -1)))
 
     return actlist
 
@@ -217,6 +191,8 @@ d = (lambda s: func_actions(s),
      lambda s, goal: func_heuristic(s, goal),
      lambda s: func_satisfies(s))
 grid = ('A', 'oBBCCoooFGHoAAFGHooooGooxoEEoooooooo')
+map_grid = create_map(grid[1])
+print(piece_coordinates(map_grid, "B"))
 print("Initial Grid")
 print(print_grid(grid[1]))
 actList = d[0](grid)
@@ -225,7 +201,7 @@ print(actList)
 for a in actList:
     print("\nPiece " + a[0])
     print("\nCost: " + str(func_cost((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a, ("G", "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"))))
-    print("\nHeuristic: " + str(func_heuristic((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a[1], 4, 0)))
+    # print("\nHeuristic: " + str(func_heuristic((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a[1], 4, 0)))
     try:
         piece, newGrid = d[1](grid, a)
         print(a)

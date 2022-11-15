@@ -54,6 +54,10 @@ def is_occupied(map, vector):
     """Checks if a given coordinate is occupied by a piece"""
     return [p for (x, y, p) in coordinates(map) if x == vector[0] and y == vector[1]]
 
+def is_coord_occupied(map, coord):
+    """Checks if a given coordinate is occupied by a piece or not"""
+    #print(map[1][coord[1]][coord[0]])
+    return map[1][coord[1]][coord[0]] != empty_tile
 
 def get(map, cursor):
     """Return piece at cursor position."""
@@ -121,6 +125,22 @@ def move_cursor(cursor_coords, final_coords):
             break
 
     return cursor_coords, commands
+
+
+def print_grid(state):
+    """Prints the map object in an easier to read format"""
+    if state is None:
+        return None
+
+    grid = state
+    raw = ""
+    i = 1
+    for char in grid:
+        raw += char
+        if i % 6 == 0:
+            raw += "\n"
+        i += 1
+    return f"{raw}"
 '''
 map = create_map("oooooHoxCCoHAAoGoooFoGoooFDDxooooooo")
 print(coordinates(map))

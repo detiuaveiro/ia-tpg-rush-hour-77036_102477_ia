@@ -223,11 +223,11 @@ class SearchTree:
         elif self.strategy == 'uniform':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.cost)
-            self.open_nodes.sort(key=lambda n: n[2])
+            self.open_nodes.sort(key=lambda n: self.all_nodes[n][3] )
         elif self.strategy == 'greedy':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic)
-            self.open_nodes.sort(key=lambda n: n[3])
+            self.open_nodes.sort(key=lambda n: self.all_nodes[n][4])
         elif self.strategy == 'a*':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic + n.cost)

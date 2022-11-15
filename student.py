@@ -60,7 +60,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate map movements to complete the level
                     initial_state \
                         = ("A", state.get("grid").split(" ")[1])
-                    strategy = "breadth"
+                    strategy = "a*"
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
 
