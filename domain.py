@@ -60,7 +60,6 @@ def func_cost(state, action, parent_state):
     return cursor_cost + abs(movement_vector[0] + movement_vector[1]) + 1
 
 
-#TODO: Melhorar esta função, procurar @cache
 @cache
 def func_heuristic(state, movement_vector, limit, depth):
     h_cost = 0

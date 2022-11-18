@@ -170,14 +170,13 @@ class SearchTree:
                     a_coords = piece_coordinates(map, "A")
 
                     newnode_heuristic = 0
-                    newnode_cost = node[-2] + self.problem[0][2](newstate, a, node[0])
+                    newnode_cost = self.problem[0][2](newstate, a, node[0])
 
                     if self.strategy == "greedy" or self.strategy == "a*":
                         newnode_heuristic = self.problem[0][3](("A", newstate[1]), (map[0] - a_coords[-1][0], 0), 4, 0)
 
                     #TODO: Tentar eliminar nós com heuristica demasiado elevada
-                    print(newnode_heuristic)
-                    newnode = (newstate, nodeID, node[2] + 1, newnode_cost, newnode_heuristic)
+                    newnode = (newstate, nodeID, node[2] + 1,node[-2] +  newnode_cost, newnode_heuristic)
 
                     if newstate[1] in [self.all_nodes[id][0][1] for id in self.open_nodes] or newstate[1] in [
                         self.all_nodes[id][0][1] for id in self.closed_nodes]:

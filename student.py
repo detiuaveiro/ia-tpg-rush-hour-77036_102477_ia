@@ -23,6 +23,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         solved = False
         level = 1
         commands = []
+        cars_to_move = []
         domain = ( lambda s : func_actions(s),
                               lambda s,a : func_result(s,a),
                               lambda s,a, p : func_cost(s,a,p),
@@ -43,25 +44,28 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 # print(state.get("selected"))                  # Peça seleccionada
 
                 #TODO: Recalcular tree search apenas se crazy car afetou uma peça que vamos mover
-                if prev != state.get("grid").split(" ")[1]:
-                    print("OH NO MY STATE CHANGED!")
-                    prev = state.get("grid").split(" ")[1]
-                    solved = False
-                    commands = []
-                    tf = 0
-                    level -= 1
+                newstate = state.get("grid").split(" ")[1]
+                if prev != newstate:
+                    moved_car = "none"
+                    for i in range(0, len(prev)):
+                        if prev[i] != newstate[i]:
+                            moved_car = newstate[i]
 
-                '''
-                if level != state.get("level"):
-                    solved = False
-                    commands = []
-                    tf = 0
-                '''
+                    if moved_car in set(cars_to_move):
+                        print("Oh no my state changed!")
+                        prev = newstate
+                        solved = False
+                        commands = []
+                        tf = 0
+                    else:
+                        print("A car I don't care about moved!")
+
                 if not solved:
                     # Calculate map movements to complete the level
                     initial_state \
                         = ("A", state.get("grid").split(" ")[1])
                     strategy = "a*"
+                    cars_to_move = []
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
 
@@ -78,6 +82,8 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     last_moved_piece = None
                     for move in moves[1:]:
                         #print(print_grid(move[1]))
+                        if len(cars_to_move) <= 5:
+                            cars_to_move.append(move[0])
                         game_map, new_commands, cursor_coords = await get_commands(move, game_map, cursor_coords, last_moved_piece)
                         commands += new_commands
                         last_moved_piece = move[0]
@@ -85,17 +91,22 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     tf = time.process_time() - t0
                     tf = tf*state.get("game_speed")
                     
-                    #print(f"Time to calculate moves: {tf}")
+                    print(f"Time to calculate moves: {tf}")
                     #print(commands)
 
                     solved = True
-                    level += 1
 
                 if tf > 1:
                     tf -= 1
                     continue
 
-                command = commands.pop(0)
+                if len(commands) != 0:
+                    command = commands.pop(0)
+                else:
+                    solved = False
+                    print("I ran out of commands :(")
+                    continue
+
                 await websocket.send(
                     json.dumps({"cmd": "key", "key": command[0]})
                 )  # send key command to server - you must implement this send in the AI agent
