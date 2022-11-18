@@ -113,15 +113,6 @@ class SearchTree:
         self.highest_cost_nodes = []
         '''
 
-    '''
-    def get_operation(self, node):
-        if node.parent is None:
-            return []
-
-        path = self.get_operation(node.parent)
-        path += [node.action]
-        return path
-    '''
     @property
     def length(self):
         return self.solution.depth
@@ -152,7 +143,7 @@ class SearchTree:
 
     # procurar a solucao
     def search(self, limit=None):
-        while self.open_nodes != []:
+        while self.open_nodes:
             nodeID = self.open_nodes.pop(0)
             node = self.all_nodes[nodeID]
             self.closed_nodes.append(nodeID)
@@ -166,11 +157,6 @@ class SearchTree:
             lnewnodes = []
             self.non_terminals += 1
 
-            '''
-            # Primeiro verificar se a profundidade da árvore não ultrapassou já o limite, no caso de pesquisa em profundidade com limite
-            if limit is None or node.depth < limit:
-            '''
-
             # procurar as ações possíveis a partir do Nó atualmente a ser expandido
             for a in self.problem[0][0](node[0]):                                       # for a in self.problem.domain.actions(node.state):
                 # Para cada ação, determina-se o resultado, isto é, o novo nó
@@ -182,19 +168,16 @@ class SearchTree:
                     #newnode = SearchNode(newstate, node, node.depth + 1)
                     map = create_map(newstate[1])
                     a_coords = piece_coordinates(map, "A")
-                    newnode = (newstate, nodeID, node[2] + 1, node[-2] + self.problem[0][2](newstate, a, node[0]),
-                               self.problem[0][3](("A", newstate[1]),
-                               (map[0] - a_coords[-1][0],0),
-                                4, 0))
 
-                    '''
-                    # Determinar custo acumulado do novo nó e, se for maior ou igual do que os maiores nós até ao momento, adicionar a highest_cost_nodes
-                    if self.highest_cost_nodes == [] or newnode.cost > self.highest_cost_nodes[0].cost:
-                        self.highest_cost_nodes = [newnode]
-                    elif newnode.cost == self.highest_cost_nodes[0].cost:
-                        self.highest_cost_nodes.append(newnode)
-                    '''
+                    newnode_heuristic = 0
+                    newnode_cost = node[-2] + self.problem[0][2](newstate, a, node[0])
 
+                    if self.strategy == "greedy" or self.strategy == "a*":
+                        newnode_heuristic = self.problem[0][3](("A", newstate[1]), (map[0] - a_coords[-1][0], 0), 4, 0)
+
+                    #TODO: Tentar eliminar nós com heuristica demasiado elevada
+                    print(newnode_heuristic)
+                    newnode = (newstate, nodeID, node[2] + 1, newnode_cost, newnode_heuristic)
 
                     if newstate[1] in [self.all_nodes[id][0][1] for id in self.open_nodes] or newstate[1] in [
                         self.all_nodes[id][0][1] for id in self.closed_nodes]:
@@ -209,7 +192,6 @@ class SearchTree:
                         lnewnodes.append(len(self.all_nodes))
                         self.all_nodes.append(newnode)
 
-
             self.add_to_open(lnewnodes)
 
         return None
@@ -223,7 +205,7 @@ class SearchTree:
         elif self.strategy == 'uniform':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.cost)
-            self.open_nodes.sort(key=lambda n: self.all_nodes[n][3] )
+            self.open_nodes.sort(key=lambda n: self.all_nodes[n][3])
         elif self.strategy == 'greedy':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic)

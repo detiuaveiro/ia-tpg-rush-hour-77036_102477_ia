@@ -37,11 +37,12 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     await websocket.recv()
                 )  # receive game update, this must be called timely or your game will get out of sync with the server
                 
-                print(state.get("cursor"))                      # Coordenadas do cursor (x,y)
-                print(state.get("grid"))                        # String da grelha
-                print(state.get("game_speed"))
+                #print(state.get("cursor"))                      # Coordenadas do cursor (x,y)
+                #print(state.get("grid"))                        # String da grelha
+                #print(state.get("game_speed"))
                 # print(state.get("selected"))                  # Peça seleccionada
 
+                #TODO: Recalcular tree search apenas se crazy car afetou uma peça que vamos mover
                 if prev != state.get("grid").split(" ")[1]:
                     print("OH NO MY STATE CHANGED!")
                     prev = state.get("grid").split(" ")[1]
@@ -60,7 +61,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate map movements to complete the level
                     initial_state \
                         = ("A", state.get("grid").split(" ")[1])
-                    strategy = "uniform"
+                    strategy = "a*"
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
 
@@ -68,8 +69,8 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     tree = tree_search.SearchTree(problem, strategy)
                     moves = tree.search()
 
-                    print(f"Time for tree search: {time.process_time()-t0}")
-                    print(moves)
+                    #print(f"Time for tree search: {time.process_time()-t0}")
+                    #print(moves)
 
                     # Calculate cursor movements to complete level
                     game_map = create_map(state.get("grid").split(" ")[1])
@@ -82,19 +83,13 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                         last_moved_piece = move[0]
 
                     tf = time.process_time() - t0
-                    tf = tf*10
+                    tf = tf*state.get("game_speed")
                     
-                    print(f"Time to calculate moves: {tf}")
-                    print(commands)
+                    #print(f"Time to calculate moves: {tf}")
+                    #print(commands)
 
                     solved = True
                     level += 1
-
-                '''
-                if (len(commands) == 0):
-                    solved = False
-                    break
-                '''
 
                 if tf > 1:
                     tf -= 1
@@ -114,26 +109,27 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 async def get_commands(move, game_map, cursor_coords, last_moved_piece):
     cursor_moves = []
 
-    map_after_move = create_map(move[1])                                               # Estado do mapa no final do Move ser realizado
-    moved_piece = move[0]                                                       # Peça a ser movida
-    current_piece_coords = piece_coordinates(game_map,moved_piece)              # Coordenadas atuais da peça
-    final_piece_coords = piece_coordinates(map_after_move,moved_piece)          # Coordenadas finais da peça após o Move ser efetuado
+    map_after_move = create_map(move[1])                                                # Estado do mapa no final do Move ser realizado
+    moved_piece = move[0]                                                               # Peça a ser movida
+    current_piece_coords = piece_coordinates(game_map,moved_piece)                      # Coordenadas atuais da peça
+    final_piece_coords = piece_coordinates(map_after_move,moved_piece)                  # Coordenadas finais da peça após o Move ser efetuado
 
     # Mover cursor para posição inicial da peça
     if last_moved_piece != moved_piece:
+        if last_moved_piece is not None:
+            cursor_moves.append((" ", map_to_string(game_map)))
         (cursor_coords, moves) = move_cursor(cursor_coords, current_piece_coords, game_map)
         cursor_moves += moves
 
     # Mover a peça da posição inicial para a posição final
-    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords, game_map, moved_piece, True, last_moved_piece)
+    (cursor_coords, moves) = move_cursor(cursor_coords, final_piece_coords, game_map, moved_piece, True)
     cursor_moves += moves
-
 
     return map_after_move, cursor_moves, cursor_coords
 
 
 # Move the cursor from an initial position to a final position, given by coordinates
-def move_cursor(cursor_coords, final_coords, game_map, moved_piece=None, movingPiece=False, last_moved_piece=None):
+def move_cursor(cursor_coords, final_coords, game_map, moved_piece=None, movingPiece=False):
     commands = []
 
     while cursor_coords != final_coords:
@@ -158,7 +154,7 @@ def move_cursor(cursor_coords, final_coords, game_map, moved_piece=None, movingP
             commands.append(("s", map_to_string(game_map)))
             cursor_coords = (cursor_coords[0], cursor_coords[1]+1)
         else:
-            if moved_piece != None and last_moved_piece != moved_piece:
+            if moved_piece is None:
                 commands.append((" ", map_to_string(game_map)))
             break
 

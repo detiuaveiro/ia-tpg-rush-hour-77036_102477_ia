@@ -1,8 +1,6 @@
-from math import hypot
-from tree_search import *
-from common import Map, MapException, Coordinates
+from common import MapException
 from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win, is_occupied, move_cursor, is_coord_occupied
-
+from functools import cache
 
 
 def func_actions(state):
@@ -62,6 +60,8 @@ def func_cost(state, action, parent_state):
     return cursor_cost + abs(movement_vector[0] + movement_vector[1]) + 1
 
 
+#TODO: Melhorar esta função, procurar @cache
+@cache
 def func_heuristic(state, movement_vector, limit, depth):
     h_cost = 0
     blocking_pieces = set()
@@ -184,7 +184,7 @@ def print_grid(state):
         i += 1
     return f"{raw}"
 
-
+'''
 d = (lambda s: func_actions(s),
      lambda s, a: func_result(s, a),
      lambda s, a: func_cost(s, a),
@@ -209,7 +209,7 @@ for a in actList:
     except:
         print("None")
 
-'''
+
 o o o o o o 
 o x C C o H
 A A o G o H
