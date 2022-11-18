@@ -7,7 +7,7 @@ import time
 # Next 4 lines are not needed for AI agents, please remove them from your code!
 import websockets
 import tree_search
-from domain import print_grid, func_satisfies, func_result, func_actions, func_cost, func_heuristic
+from domain import func_satisfies, func_result, func_actions, func_cost, func_heuristic
 from common import Map, MapException, Coordinates
 from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win
 
@@ -52,13 +52,12 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                             moved_car = newstate[i]
 
                     if moved_car in set(cars_to_move):
-                        print("Oh no my state changed!")
+                        #print("Oh no my state changed!")
                         prev = newstate
                         solved = False
                         commands = []
                         tf = 0
-                    else:
-                        print("A car I don't care about moved!")
+                        #print("A car I don't care about moved!")
 
                 if not solved:
                     # Calculate map movements to complete the level
@@ -91,7 +90,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     tf = time.process_time() - t0
                     tf = tf*state.get("game_speed")
                     
-                    print(f"Time to calculate moves: {tf}")
+                    #print(f"Time to calculate moves: {tf}")
                     #print(commands)
 
                     solved = True
@@ -104,7 +103,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     command = commands.pop(0)
                 else:
                     solved = False
-                    print("I ran out of commands :(")
+                    #print("I ran out of commands :(")
                     continue
 
                 await websocket.send(
@@ -113,7 +112,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
                 prev = command[1]
             except websockets.exceptions.ConnectionClosedOK:
-                print("Server has cleanly disconnected us")
+                #print("Server has cleanly disconnected us")
                 return
 
 
@@ -177,5 +176,5 @@ def move_cursor(cursor_coords, final_coords, game_map, moved_piece=None, movingP
 loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
 PORT = os.environ.get("PORT", "8000")
-NAME = os.environ.get("NAME", getpass.getuser())
+NAME = os.environ.get("NAME", '102477')
 loop.run_until_complete(agent_loop(f"{SERVER}:{PORT}", NAME))
