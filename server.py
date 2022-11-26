@@ -50,7 +50,6 @@ class GameServer:
         if os.path.isfile(HIGHSCORE_FILE):
             with open(HIGHSCORE_FILE, "r") as infile:
                 self._highscores = json.load(infile)
-                print(self._highscores)
 
     def save_highscores(self, score: int):
         """Update highscores, storing to file."""
@@ -69,7 +68,6 @@ class GameServer:
             :MAX_HIGHSCORES
         ]
 
-        print(self._highscores)
 
         with open(HIGHSCORE_FILE, "w") as outfile:
             json.dump(self._highscores, outfile)
@@ -196,7 +194,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--grading-server",
         help="url of grading server",
-        default=None,  # "http://atnog-tetriscores.av.it.pt/game",
+        default="http://atnog-tetriscores.av.it.pt/game",
     )
     args = parser.parse_args()
 
