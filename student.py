@@ -8,7 +8,6 @@ import time
 import websockets
 import tree_search
 from domain import func_satisfies, func_result, func_actions, func_cost, func_heuristic
-from common import Map, MapException, Coordinates
 from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win
 
 
@@ -24,11 +23,13 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         level = 1
         commands = []
         cars_to_move = []
-        domain = ( lambda s : func_actions(s),
-                              lambda s,a : func_result(s,a),
-                              lambda s,a, p : func_cost(s,a,p),
-                              lambda s,m,l,d : func_heuristic(s,m,l,d),
-                              lambda s : func_satisfies(s) )
+        domain = ( 
+            lambda s : func_actions(s),
+            lambda s,a : func_result(s,a),
+            lambda s,a, p : func_cost(s,a,p),
+            lambda s,m,l,d : func_heuristic(s,m,l,d),
+            lambda s : func_satisfies(s) 
+        )
         tf = 0
         prev = ""
 
@@ -63,7 +64,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate map movements to complete the level
                     initial_state \
                         = ("A", state.get("grid").split(" ")[1])
-                    strategy = "a*"
+                    strategy = "uniform"
                     cars_to_move = []
                     ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
@@ -81,7 +82,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     last_moved_piece = None
                     for move in moves[1:]:
                         #print(print_grid(move[1]))
-                        if len(cars_to_move) <= 5:
+                        if len(cars_to_move) <= 2:
                             cars_to_move.append(move[0])
                         game_map, new_commands, cursor_coords = await get_commands(move, game_map, cursor_coords, last_moved_piece)
                         commands += new_commands

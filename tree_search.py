@@ -1,98 +1,4 @@
-# Module: tree_search
-# 
-# This module provides a set o classes for automated
-# problem solving through tree search:
-#    SearchDomain  - problem domains
-#    SearchProblem - concrete problems to be solved
-#    SearchNode    - search tree nodes
-#    SearchTree    - search tree with the necessary methods for searhing
-#
-#  (c) Luis Seabra Lopes
-#  Introducao a Inteligencia Artificial, 2012-2019,
-#  Inteligência Artificial, 2014-2019
-
-from abc import ABC, abstractmethod
 from map_methods import piece_coordinates, create_map
-
-'''
-NOTA: Usando tuplos em vez das classes SearchDomain e SearchProblem, tem-se:
-
-domain = (func_actions(s),func_result(s,a),func_cost(s,a),func_heuristic(s,goal),func_satisfies(s))
-problem = (domain, initial_state)
-node = (state, parent, depth, cost, heuristic)
-'''
-
-'''
-# Dominios de pesquisa
-# Permitem calcular as accoes possiveis em cada estado, etc
-class SearchDomain(ABC):
-
-    # construtor
-    @abstractmethod
-    def __init__(self):
-        pass
-
-    # lista de accoes possiveis num estado
-    @abstractmethod
-    def actions(self, state):
-        pass
-
-    # resultado de uma accao num estado, ou seja, o estado seguinte
-    @abstractmethod
-    def result(self, state, action):
-        pass
-
-    # custo de uma accao num estado
-    @abstractmethod
-    def cost(self, state, action):
-        pass
-
-    # custo estimado de chegar de um estado a outro
-    @abstractmethod
-    def heuristic(self, state, goal):
-        pass
-
-    # test if the given "goal" is satisfied in "state"
-    @abstractmethod
-    def satisfies(self, state):
-        pass
-
-
-# Problemas concretos a resolver
-# dentro de um determinado dominio
-class SearchProblem:
-    def __init__(self, domain, initial):
-        self.domain = domain
-        self.initial = initial
-
-    def goal_test(self, state):
-        return self.domain.satisfies(state)
-
-
-# Nos de uma arvore de pesquisa
-class SearchNode:
-    def __init__(self, state, parent, depth=1, cost=0, heuristic=0):
-        self.state = state
-        self.parent = parent
-        self.depth = depth
-        self.cost = cost
-        self.heuristic = heuristic
-
-    # Função utilizada para verificar se um novo nó na pesquisa faz parte do estado do nó atual, isto é, se já fez parte do caminho
-    # de pesquisa atual (sendo portanto um dos seus parentes)
-    def in_parent(self, state):
-        if self.parent is None:
-            return False
-        if self.parent.state == state:
-            return True
-        return self.parent.in_parent(state)
-
-    def __str__(self):
-        return "no(" + str(self.state) + "," + str(self.parent) + ")"
-
-    def __repr__(self):
-        return str(self)
-'''
 
 # Arvores de pesquisa
 class SearchTree:
@@ -100,7 +6,6 @@ class SearchTree:
     # construtor
     def __init__(self, problem, strategy='breadth'):
         self.problem = problem
-        ## root = SearchNode(problem.initial, None)
         root = (self.problem[1], None, 0, 0, 0)
         self.open_nodes = [0]
         self.closed_nodes = []
@@ -109,31 +14,10 @@ class SearchTree:
         self.solution = None
         self.terminals = 0
         self.non_terminals = 0
-        '''
-        self.highest_cost_nodes = []
-        '''
-
-    @property
-    def length(self):
-        return self.solution.depth
-
-    @property
-    def avg_branching(self):
-        return (self.terminals + self.non_terminals - 1) / self.non_terminals
-
-    @property
-    def cost(self):
-        return self.solution.cost
+        self.visited = set()
 
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self, node):
-        '''
-        if node.parent == None:
-            return [node.state]
-        path = self.get_path(node.parent)
-        path += [node.state]
-        return path
-        '''
         if node[1] is None:
             return [node[0]]
         path = self.get_path(self.all_nodes[node[1]])
@@ -164,7 +48,7 @@ class SearchTree:
                 # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
                 # if not self.in_parent(node, newstate):
                 # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
-                if newstate not in self.get_path(node):
+                if newstate[1] not in self.visited:
                     #newnode = SearchNode(newstate, node, node.depth + 1)
                     map = create_map(newstate[1])
                     a_coords = piece_coordinates(map, "A")
@@ -186,10 +70,13 @@ class SearchTree:
                         if newnode[3] < self.all_nodes[state_id][3]:
                             # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
                             self.all_nodes[state_id] = newnode
+                    
                     else:
                         # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
                         lnewnodes.append(len(self.all_nodes))
                         self.all_nodes.append(newnode)
+                    
+                    self.visited.add(newstate[1])
 
             self.add_to_open(lnewnodes)
 
