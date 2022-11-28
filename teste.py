@@ -22,4 +22,4 @@ moves = tree.search()
 
 tf = perf_counter()
 
-print("Time to calculate moves %f", tf - t0)
+print("Time to calculate moves", tf - t0)
