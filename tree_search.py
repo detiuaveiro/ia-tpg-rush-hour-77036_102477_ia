@@ -1,5 +1,9 @@
 from map_methods import piece_coordinates, create_map
 
+'''
+state = (grid_str, grid_size)
+'''
+
 # Arvores de pesquisa
 class SearchTree:
 

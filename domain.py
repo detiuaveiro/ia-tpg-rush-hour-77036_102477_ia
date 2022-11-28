@@ -1,5 +1,5 @@
 from common import MapException
-from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win, is_occupied, move_cursor, is_coord_occupied
+from map_methods import *
 from functools import cache
 
 
@@ -12,7 +12,6 @@ def func_actions(state):
         piece_coords = piece_coordinates(map_grid, piece)
 
         orientation = "vertical" if piece_coords[0][0] == piece_coords[1][0] else "horizontal"
-        #print("Piece: " + piece + " " + orientation)
 
         if orientation == "horizontal":
             # Andar para a frente
@@ -144,75 +143,3 @@ def func_satisfies(state):
     current_map = create_map(state[1])
 
     return test_win(current_map)
-
-
-'''
-class Domain(SearchDomain):
-    def __init__(self):
-        pass
-
-    def actions(self, state):
-        return func_actions(state)
-
-    def result(self, state, action):
-        return func_result(state, action)
-
-    def cost(self, state, action):
-        pass
-    def heuristic(self, state, goal):
-        pass
-    def satisfies(self, state):
-        return func_satisfies(state)
-'''
-
-''' TESTS '''
-
-
-def print_grid(state):
-    """Prints the map object in an easier to read format"""
-    if state is None:
-        return None
-
-    grid = state
-    raw = ""
-    i = 1
-    for char in grid:
-        raw += char
-        if i % 6 == 0:
-            raw += "\n"
-        i += 1
-    return f"{raw}"
-
-'''
-d = (lambda s: func_actions(s),
-     lambda s, a: func_result(s, a),
-     lambda s, a: func_cost(s, a),
-     lambda s, goal: func_heuristic(s, goal),
-     lambda s: func_satisfies(s))
-grid = ('A', 'oBBCCoooFGHoAAFGHooooGooxoEEoooooooo')
-map_grid = create_map(grid[1])
-print(piece_coordinates(map_grid, "B"))
-print("Initial Grid")
-print(print_grid(grid[1]))
-actList = d[0](grid)
-print(actList)
-
-for a in actList:
-    print("\nPiece " + a[0])
-    print("\nCost: " + str(func_cost((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a, ("G", "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"))))
-    # print("\nHeuristic: " + str(func_heuristic((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a[1], 4, 0)))
-    try:
-        piece, newGrid = d[1](grid, a)
-        print(a)
-        print(print_grid(newGrid))
-    except:
-        print("None")
-
-
-o o o o o o 
-o x C C o H
-A A o G o H
-o F o G o o
-o F D D x o
-o o o o o o
-'''

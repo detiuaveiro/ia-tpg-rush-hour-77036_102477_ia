@@ -1,5 +1,6 @@
 import math
 from common import MapException
+
 '''
 map = (grid_size, grid, cars)
 '''
@@ -141,12 +142,3 @@ def print_grid(state):
             raw += "\n"
         i += 1
     return f"{raw}"
-'''
-map = create_map("oooooHoxCCoHAAoGoooFoGoooFDDxooooooo")
-print(coordinates(map))
-print(piece_coordinates(map, "A"))
-grid = move(map, "A", (1,0))
-print(piece_coordinates(map, "A"))
-print(map)
-print(map_to_string(map))
-'''

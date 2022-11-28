@@ -1,15 +1,12 @@
 """Example client."""
 import asyncio
-import getpass
 import json
 import os
 import time
-# Next 4 lines are not needed for AI agents, please remove them from your code!
 import websockets
 import tree_search
-from domain import func_satisfies, func_result, func_actions, func_cost, func_heuristic
-from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win
-
+from domain import *
+from map_methods import *
 
 
 async def agent_loop(server_address="localhost:8000", agent_name="student"):
@@ -39,12 +36,6 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     await websocket.recv()
                 )  # receive game update, this must be called timely or your game will get out of sync with the server
                 
-                #print(state.get("cursor"))                      # Coordenadas do cursor (x,y)
-                #print(state.get("grid"))                        # String da grelha
-                #print(state.get("game_speed"))
-                # print(state.get("selected"))                  # Peça seleccionada
-
-                #TODO: Recalcular tree search apenas se crazy car afetou uma peça que vamos mover
                 newstate = state.get("grid").split(" ")[1]
                 if prev != newstate:
                     moved_car = "none"
@@ -53,36 +44,28 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                             moved_car = newstate[i]
 
                     if moved_car in set(cars_to_move):
-                        #print("Oh no my state changed!")
                         prev = newstate
                         solved = False
                         commands = []
                         tf = 0
-                        #print("A car I don't care about moved!")
 
                 if not solved:
                     # Calculate map movements to complete the level
-                    initial_state \
-                        = ("A", state.get("grid").split(" ")[1])
                     strategy = "uniform"
                     cars_to_move = []
-                    ## problem = tree_search.SearchProblem(domain.Domain(), initial_state)
                     t0 = time.process_time()
 
+                    initial_state = ("A", state.get("grid").split(" ")[1])
                     problem = (domain, initial_state)
                     tree = tree_search.SearchTree(problem, strategy)
                     moves = tree.search()
-
-                    #print(f"Time for tree search: {time.process_time()-t0}")
-                    #print(moves)
 
                     # Calculate cursor movements to complete level
                     game_map = create_map(state.get("grid").split(" ")[1])
                     cursor_coords = (state.get("cursor")[0], state.get("cursor")[1])
                     last_moved_piece = None
                     for move in moves[1:]:
-                        #print(print_grid(move[1]))
-                        if len(cars_to_move) <= 2:
+                        if len(cars_to_move) <= 5:
                             cars_to_move.append(move[0])
                         game_map, new_commands, cursor_coords = await get_commands(move, game_map, cursor_coords, last_moved_piece)
                         commands += new_commands
@@ -91,9 +74,6 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     tf = time.process_time() - t0
                     tf = tf*state.get("game_speed")
                     
-                    #print(f"Time to calculate moves: {tf}")
-                    #print(commands)
-
                     solved = True
 
                 if tf > 1:
@@ -104,16 +84,14 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     command = commands.pop(0)
                 else:
                     solved = False
-                    #print("I ran out of commands :(")
                     continue
 
                 await websocket.send(
                     json.dumps({"cmd": "key", "key": command[0]})
-                )  # send key command to server - you must implement this send in the AI agent
+                )  # send key to server
 
                 prev = command[1]
             except websockets.exceptions.ConnectionClosedOK:
-                #print("Server has cleanly disconnected us")
                 return
 
 
