@@ -15,16 +15,21 @@ initial_state = ("ooxLCCoooLDDAAKoooIJKEENIJFFMNGGHHMN", 6)
 
 problem = (domain, initial_state)
 
-t0 = perf_counter()
 
 tree = SearchTree(problem)
 
-moves = tree.search()
+solution = tree.search()
+
+t0 = perf_counter()
+
+moves = []
+for i in range(len(solution) - 1):
+    moved_car = get_moved_car(solution[i], solution[i+1])
+    move = (moved_car, get_car_movement(solution[i], solution[i+1], moved_car))
+    moves.append(move)
+
+print(moves)
 
 tf = perf_counter()
-
-for move in moves:
-    print_grid(move)
-    print()
 
 print("Time to calculate moves", tf - t0)

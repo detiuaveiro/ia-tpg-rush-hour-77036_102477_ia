@@ -1,29 +1,12 @@
+from grid_methods import *
 
-def get_car_info(state, car_id):
-    # grid info
-    grid = state[0]
+grid1 = 'IJxCCoIJDDMooAAoMNooKEENFFKLoNGGoLHH'
+grid2 = 'IJxCCoIJDDMoooAAMNooKEENFFKLoNGGoLHH'
 
-    # car info
-    car_index = grid.index(car_id)
-    car_size = grid.count(car_id)
-
-    # Calculate car orientation
-    if grid[car_index - 1] == car_id  or grid[car_index +  car_size - 1] == car_id:
-        car_orientation = 'H'
-    else:
-        car_orientation = 'V'
-    
-    return (car_id, car_index, car_size, car_orientation)
-
-
-def print_grid(state):
-    grid = state[0]
-    grid_size = state[1]
-    for i in range(grid_size):
-        for j in range(grid_size):
-            print(grid[i * grid_size + j], end = ' ')
-        print()
-
+print_grid((grid1, 6))
+print()
+print_grid((grid2, 6))
+print()
 
 # get car that moved in the last move
 def get_moved_car(state1, state2):
@@ -32,13 +15,12 @@ def get_moved_car(state1, state2):
 
     for i in range(len(grid1)):
         if grid1[i] != grid2[i]:
-            if grid1[i] == 'o':
-                return grid2[i]
-            else:
-                return grid1[i]
+            return grid1[i]
 
     return None
 
+moved_car = get_moved_car((grid1, 6), (grid2, 6))
+print(moved_car)
 
 # get car movement 
 def get_car_movement(state1, state2, car_id):
@@ -66,3 +48,6 @@ def get_car_movement(state1, state2, car_id):
             return 's'
         else:
             return 'w'
+    
+car_movement = get_car_movement((grid1, 6), (grid2, 6), moved_car)
+print(car_movement)

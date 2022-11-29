@@ -161,6 +161,5 @@ def func_heuristic(state, movement_vector, limit, depth):
 
 def func_satisfies(state):
     grid = state[0]
-    grid_size = state[1]
 
     return grid[len(grid) // 2 - 1] == 'A'
