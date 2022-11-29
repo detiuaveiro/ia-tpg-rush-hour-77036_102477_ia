@@ -14,7 +14,10 @@ def func_actions(state):
 
     cars = set(grid)
     cars.remove ('o')
-    cars.remove('x')
+    try:
+        cars.remove('x')
+    except:
+        pass
 
     for car in cars:
         car_info = get_car_info(state, car)
@@ -161,5 +164,9 @@ def func_heuristic(state, movement_vector, limit, depth):
 
 def func_satisfies(state):
     grid = state[0]
+    grid_size = state[1]
 
-    return grid[len(grid) // 2 - 1] == 'A'
+    if grid_size % 2 == 0:
+        return grid[len(grid) // 2 + grid_size - 1] == 'A'
+    else:
+        return grid[len(grid) // 2 - 1] == 'A'

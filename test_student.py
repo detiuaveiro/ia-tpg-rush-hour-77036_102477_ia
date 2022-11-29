@@ -11,10 +11,9 @@ domain = (
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("ooxLCCoooLDDAAKoooIJKEENIJFFMNGGHHMN", 6)
+initial_state = ("oooooooooooooDGJoooooDGJoooBCEHKAAoBCEHKoooooFILoooooFILoooooooo", 8)
 
 problem = (domain, initial_state)
-
 
 tree = SearchTree(problem)
 
@@ -27,8 +26,6 @@ for i in range(len(solution) - 1):
     moved_car = get_moved_car(solution[i], solution[i+1])
     move = (moved_car, get_car_movement(solution[i], solution[i+1], moved_car))
     moves.append(move)
-
-print(moves)
 
 tf = perf_counter()
 
