@@ -15,3 +15,11 @@ def get_car_info(state, car_id):
     
     return (car_id, car_index, car_size, car_orientation)
 
+
+def print_grid(state):
+    grid = state[0]
+    grid_size = state[1]
+    for i in range(grid_size):
+        for j in range(grid_size):
+            print(grid[i * grid_size + j], end = ' ')
+        print()

@@ -1,49 +1,69 @@
 from common import MapException
 from map_methods import *
 from functools import cache
+from grid_methods import *
 
+'''
+state = (grid, grid_size, cursor)
+'''
 
 def func_actions(state):
-    map_grid = create_map(state[1])
-    pieces = map_grid[-1]
-
+    grid = state[0]
+    grid_size = state[1]
     actlist = []
-    for piece in pieces:
-        piece_coords = piece_coordinates(map_grid, piece)
 
-        orientation = "vertical" if piece_coords[0][0] == piece_coords[1][0] else "horizontal"
+    cars = set(grid)
+    cars.remove ('o')
+    cars.remove('x')
 
-        if orientation == "horizontal":
-            # Andar para a frente
-            if not piece_coords[-1][0] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0] + 1, piece_coords[0][1])):
-                actlist.append((piece, (1, 0)))
+    for car in cars:
+        car_info = get_car_info(state, car)
+        car_index = car_info[1]
+        car_size = car_info[2]
+        car_orientation = car_info[3]
 
-            # Andar para trás
-            if not piece_coords[0][0] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0] - 1, piece_coords[0][1])):
-                actlist.append((piece, (-1, 0)))
+        if car_orientation == 'H':
+            if car_index % grid_size != 0 and grid[car_index - 1] == 'o':
+                actlist.append((car_info, 'a'))
+            if car_index % grid_size + car_size < grid_size and grid[car_index + car_size] == 'o':
+                actlist.append((car_info, 'd'))
         else:
-            # Andar para baixo
-            if not piece_coords[-1][1] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0], piece_coords[-1][1] + 1)):
-                actlist.append((piece, (0, 1)))
-
-            # Andar para cima
-            if not piece_coords[0][1] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0], piece_coords[0][1] - 1)):
-                actlist.append((piece, (0, -1)))
+            if car_index >= grid_size and grid[car_index - grid_size] == 'o':
+                actlist.append((car_info, 'w'))
+            if car_index + car_size * grid_size < grid_size * grid_size and grid[car_index + car_size * grid_size] == 'o':
+                actlist.append((car_info, 's'))
 
     return actlist
 
 
 def func_result(state, action):
-    current_map = create_map(state[1])
-    (piece, movement_vector) = action
+    grid = state[0]
+    grid_size = state[1]
+    car_info = action[0]
+    movement = action[1]
 
-    try:
-        current_map = move(current_map, piece, movement_vector)
-    except MapException:
-        return None
+    car_id = car_info[0]
+    car_index = car_info[1]
+    car_size = car_info[2]
 
-    return piece, map_to_string(current_map)
+    grid_after_move = list(grid)
 
+    match movement:
+        case 'w':
+            grid_after_move[car_index - grid_size] = car_id
+            grid_after_move[car_index + car_size * grid_size - grid_size] = 'o'
+        case 'a':
+            grid_after_move[car_index - 1] = car_id
+            grid_after_move[car_index + car_size - 1] = 'o'
+        case 's':
+            grid_after_move[car_index + car_size * grid_size] = car_id
+            grid_after_move[car_index] = 'o'
+        case 'd':
+            grid_after_move[car_index + car_size] = car_id
+            grid_after_move[car_index] = 'o'
+    
+    return (''.join(grid_after_move), grid_size)
+    
 
 def func_cost(state, action, parent_state):
     current_map = create_map(state[1])
@@ -140,6 +160,7 @@ def func_heuristic(state, movement_vector, limit, depth):
 
 
 def func_satisfies(state):
-    current_map = create_map(state[1])
+    grid = state[0]
+    grid_size = state[1]
 
-    return test_win(current_map)
+    return grid[len(grid) // 2 - 1] == 'A'
