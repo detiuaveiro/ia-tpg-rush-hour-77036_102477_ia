@@ -11,7 +11,7 @@ domain = (
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("oooooooooooooDGJoooooDGJoooBCEHKAAoBCEHKoooooFILoooooFILoooooooo", 8)
+initial_state = ("ooooooooooBoAAooBooooooooooooooooooo", 6)
 
 problem = (domain, initial_state)
 
@@ -29,4 +29,6 @@ for i in range(len(solution) - 1):
 
 tf = perf_counter()
 
+print(moves)
+print()
 print("Time to calculate moves", tf - t0)

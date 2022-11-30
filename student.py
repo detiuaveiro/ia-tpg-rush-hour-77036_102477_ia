@@ -25,8 +25,8 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
             lambda s,m,l,d : func_heuristic(s,m,l,d),
             lambda s : func_satisfies(s) 
         )
-        tf = 0
         prev = ""
+        level = 1
 
         while True:
             try:
@@ -36,13 +36,22 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 
                 grid = state.get("grid").split(" ")[1]
                 grid_size = state.get("dimensions")[0]
+                selected = state.get("selected")
+                cursor_coords = (state.get("cursor")[0], state.get("cursor")[1])
+                game_level = state.get("level")
+
+                if game_level != level:
+                    level = game_level
+                    moves = []
+                    prev = ""
 
                 if prev != grid:
                     solved = False
+                    moves = []
 
                 if not solved:
                     # Calculate map movements to complete the level
-                    strategy = "uniform"
+                    strategy = "breadth"
 
                     initial_state = (grid, grid_size)
                     problem = (domain, initial_state)
@@ -51,22 +60,30 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
                     for i in range(len(solution) - 1):
                         moved_car = get_moved_car(solution[i], solution[i+1])
-                        move = (moved_car, get_car_movement(solution[i], solution[i+1], moved_car))
+                        move = (moved_car, get_car_movement(solution[i], solution[i+1], moved_car), solution[i+1][0])
                         moves.append(move)
 
                     solved = True
-
-                if len(commands) != 0:
-                    command = commands.pop(0)
+                
+                move = moves[0]
+                if selected == '':
+                    key = get_cursor_move(cursor_coords, (grid, grid_size), move[0])
+                    prev = grid
+                elif selected == move[0]:
+                    prev = move[-1]
+                    key = move[1]
+                    moves.pop(0)
+                elif selected != move[0]:
+                    key = ' '
+                    prev = grid
                 else:
                     solved = False
-                    continue
+                    moves = []
 
                 await websocket.send(
-                    json.dumps({"cmd": "key", "key": command[0]})
+                    json.dumps({"cmd": "key", "key": key})
                 )  # send key to server
 
-                prev = command[1]
             except websockets.exceptions.ConnectionClosedOK:
                 return
 

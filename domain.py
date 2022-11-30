@@ -163,10 +163,11 @@ def func_heuristic(state, movement_vector, limit, depth):
 
 
 def func_satisfies(state):
-    grid = state[0]
     grid_size = state[1]
 
-    if grid_size % 2 == 0:
-        return grid[len(grid) // 2 + grid_size - 1] == 'A'
-    else:
-        return grid[len(grid) // 2 - 1] == 'A'
+    car_info = get_car_info(state, 'A')
+    car_index = car_info[1]
+
+    car_x = car_index % grid_size + 1
+
+    return car_x == grid_size - 1

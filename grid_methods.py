@@ -1,3 +1,4 @@
+import math
 
 def get_car_info(state, car_id):
     # grid info
@@ -66,3 +67,40 @@ def get_car_movement(state1, state2, car_id):
             return 's'
         else:
             return 'w'
+
+def get_cursor_move(cursor_coords, state, car_id):
+    car_info = get_car_info(state, car_id)
+    car_coords = get_car_coords(car_info, state)
+
+    closest_coords = min(car_coords, key=lambda point: math.hypot(cursor_coords[1] - point[1], cursor_coords[0] - point[0]))
+
+    if closest_coords == cursor_coords:
+        return ' '
+
+    if closest_coords[0] == cursor_coords[0]:
+        if closest_coords[1] < cursor_coords[1]:
+            return 'w'
+        else:
+            return 's'
+    else:
+        if closest_coords[0] < cursor_coords[0]:
+            return 'a'
+        else:
+            return 'd'
+
+
+
+def get_car_coords(car_info, state):
+    car_index = car_info[1]
+    car_length = car_info[2]
+    car_orientation = car_info[3]
+
+    car_x = car_index % state[1]
+    car_y = car_index // state[1]
+
+    if car_orientation == 'H':
+        car_coords = [(car_x + i, car_y) for i in range(car_length)]
+    else:
+        car_coords = [(car_x, car_y + i) for i in range(car_length)]
+
+    return car_coords
