@@ -14,10 +14,7 @@ def func_actions(state):
 
     cars = set(grid)
     cars.remove ('o')
-    try:
-        cars.remove('x')
-    except:
-        pass
+    cars.discard('x')
 
     for car in cars:
         car_info = get_car_info(state, car)
