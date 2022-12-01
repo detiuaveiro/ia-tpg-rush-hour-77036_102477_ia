@@ -1,4 +1,3 @@
-from map_methods import piece_coordinates, create_map
 
 '''
 car = (car_id, car_index, car_length, car_orientation)

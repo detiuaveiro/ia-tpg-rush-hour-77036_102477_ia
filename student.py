@@ -5,8 +5,6 @@ import os
 import websockets
 import tree_search
 from domain import *
-from map_methods import *
-from time import perf_counter
 
 
 async def agent_loop(server_address="localhost:8000", agent_name="student"):
