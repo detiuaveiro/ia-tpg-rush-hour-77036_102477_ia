@@ -51,7 +51,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                     # Calculate map movements to complete the level
                     strategy = "breadth"
 
-                    initial_state = (grid, grid_size)
+                    initial_state = (grid, grid_size, cursor_coords)
                     problem = (domain, initial_state)
                     tree = tree_search.SearchTree(problem, strategy)
                     solution = tree.search()
@@ -84,8 +84,6 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
             except websockets.exceptions.ConnectionClosedOK:
                 return
-
-
 
 
 # DO NOT CHANGE THE LINES BELLOW
