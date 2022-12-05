@@ -1,11 +1,11 @@
 
 '''
 car = (car_id, car_index, car_length, car_orientation)
-state = (grid_str, grid_size)
+state = (grid_str, grid_size, cursor)
 node = (state, parentID, depth, cost, heuristic)
 problem = (domain, initial_state)
 domain = func_actions(state), func_result(state,action),
-         func_cost(s,a,p), func_heuristic(s,m,l,d),
+         func_cost(s,a,p), func_heuristic(s,a,l,d),
          func_satisfies(state)
 '''
 
@@ -48,6 +48,7 @@ class SearchTree:
         while self.open_nodes:
             nodeID = self.open_nodes.pop(0)
             node = self.all_nodes[nodeID]
+            self.closed_nodes.append(nodeID)
 
             # In case the goal has been achieved
             if self.problem[0][4](node[0]):
@@ -62,11 +63,37 @@ class SearchTree:
             # previously visited
             for action in self.problem[0][0](node[0]):
                 newstate = self.problem[0][1](node[0], action)
-                if newstate not in self.visited:
-                    newnode = (newstate, nodeID, node[2] + 1, 0, 0)
-                    lnewnodes.append(len(self.all_nodes))
-                    self.all_nodes.append(newnode)
-                    self.visited.add(newstate)
+
+                if newstate[0] not in self.visited:
+                    if self.strategy == "breadth" or self.strategy == "depth":
+                        cost = 0
+                    else:
+                        cost = self.problem[0][2](action, node[0]) +  node[3]
+
+                    heuristic = 0
+
+                    if self.strategy == "greedy" or self.strategy == "a*":
+                        heuristic = self.problem[0][3](newstate, action, 4, 0)
+
+                    newnode = (newstate, nodeID, node[2] + 1, cost, heuristic)
+
+                    #TODO: Melhorar estes loops, deve haver forma mais eficiente de fazer isto
+                    if newstate[0] in [self.all_nodes[id][0][0] for id in self.open_nodes] or newstate[0] in [
+                        self.all_nodes[id][0][0] for id in self.closed_nodes]:
+                        # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
+                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0][0] == newstate[0]][
+                            0]
+
+                        if newnode[3] < self.all_nodes[state_id][3]:
+                            # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
+                            self.all_nodes[state_id] = newnode
+
+                    else:
+                        # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
+                        lnewnodes.append(len(self.all_nodes))
+                        self.all_nodes.append(newnode)
+
+                    self.visited.add(newstate[0])
 
             self.add_to_open(lnewnodes)
         return None

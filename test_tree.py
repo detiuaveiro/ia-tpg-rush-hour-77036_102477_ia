@@ -6,18 +6,18 @@ from grid_methods import *
 domain = ( 
             lambda s : func_actions(s),
             lambda s,a : func_result(s,a),
-            lambda s,a, p : func_cost(s,a,p),
+            lambda a,p : func_cost(a,p),
             lambda s,m,l,d : func_heuristic(s,m,l,d),
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("ooooooooooBoAAooBooooooooooooooooooo", 6)
+initial_state = ("ooooooooooooooEHooooCDEHoooBCDFIAAoBCDFIooooooGJooooooGJoooooooJ", 8 , (0,2))
 
 problem = (domain, initial_state)
 
 t0 = perf_counter()
 
-tree = SearchTree(problem)
+tree = SearchTree(problem, "breadth")
 
 moves = tree.search()
 

@@ -19,8 +19,8 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         domain = ( 
             lambda s : func_actions(s),
             lambda s,a : func_result(s,a),
-            lambda s,a, p : func_cost(s,a,p),
-            lambda s,m,l,d : func_heuristic(s,m,l,d),
+            lambda a,p : func_cost(a,p),
+            lambda s,a,l,d : func_heuristic(s,a,l,d),
             lambda s : func_satisfies(s) 
         )
         prev = ""
