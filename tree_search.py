@@ -1,3 +1,4 @@
+from grid_methods import *
 
 '''
 car = (car_id, car_index, car_length, car_orientation)
@@ -73,7 +74,7 @@ class SearchTree:
                     heuristic = 0
 
                     if self.strategy == "greedy" or self.strategy == "a*":
-                        heuristic = self.problem[0][3](newstate, action, 4, 0)
+                        heuristic = self.problem[0][3](newstate, (get_car_info(newstate, 'A'), 'd'), 4, 0)
 
                     newnode = (newstate, nodeID, node[2] + 1, cost, heuristic)
 

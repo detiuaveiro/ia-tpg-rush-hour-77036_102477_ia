@@ -1,4 +1,5 @@
 from grid_methods import *
+from functools import cache
 
 '''
 state = (grid, grid_size, cursor)
@@ -120,6 +121,7 @@ def func_cost(action, parent_state):
     return abs(prev_cursor_coords[0] - closest_coords[0]) + abs(prev_cursor_coords[1] - closest_coords[1]) + 2
 
 
+@cache
 def func_heuristic(state, action, limit, depth, originalCar=None):
     """
 
@@ -135,9 +137,6 @@ def func_heuristic(state, action, limit, depth, originalCar=None):
 
     if depth >= limit:
         return float("inf")
-    elif depth == 0:
-        # Describes the car moved in the action for which the heuristic is being calculated
-        originalCar = moved_car_info[0]
 
     car_index = moved_car_info[1]
     car_size = moved_car_info[2]
@@ -154,7 +153,7 @@ def func_heuristic(state, action, limit, depth, originalCar=None):
     elif movement_direction == 's':
         if car_index + car_size * grid_size < grid_size * grid_size and grid[car_index + car_size * grid_size] != 'o':
             blocking_pieces.add(grid[car_index + car_size * grid_size])
-
+    
     if len(blocking_pieces) > 0:
         h_cost += 1
 
@@ -164,15 +163,16 @@ def func_heuristic(state, action, limit, depth, originalCar=None):
     for car in blocking_pieces:
         blocking_car_info = get_car_info(state, car)
         blocking_car_orientation = blocking_car_info[-1]
+        originalCar = moved_car_info[0]
 
         if blocking_car_orientation == "horizontal":
-            h1 = func_heuristic(state, (blocking_car_info, 'a'), limit + 1, depth + 1, originalCar)
-            h2 = func_heuristic(state, (blocking_car_info, 'd'), limit + 1, depth + 1, originalCar)
+            h1 = func_heuristic(state, (blocking_car_info, 'a'), limit, depth + 1, originalCar)
+            h2 = func_heuristic(state, (blocking_car_info, 'd'), limit, depth + 1, originalCar)
 
             h_cost += min(h1, h2)
         else:
-            h1 = func_heuristic(state, (blocking_car_info, 'w'), limit + 1, depth + 1, originalCar)
-            h2 = func_heuristic(state, (blocking_car_info, 's'), limit + 1, depth + 1, originalCar)
+            h1 = func_heuristic(state, (blocking_car_info, 'w'), limit, depth + 1, originalCar)
+            h2 = func_heuristic(state, (blocking_car_info, 's'), limit, depth + 1, originalCar)
 
             h_cost += min(h1, h2)
 

@@ -11,7 +11,7 @@ domain = (
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("ooooooooooooooEHooooCDEHoooBCDFIAAoBCDFIooooooGJooooooGJoooooooJ", 8 , (0,2))
+initial_state = ("EBBBooEooFooEAAFooooCCoooDDDoooooooo", 6 , (3,3))
 
 problem = (domain, initial_state)
 
