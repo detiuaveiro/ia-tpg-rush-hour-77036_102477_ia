@@ -1,218 +1,162 @@
-from common import MapException
-from map_methods import create_map, map_to_string, coordinates, piece_coordinates, get, move, test_win, is_occupied, move_cursor, is_coord_occupied
-from functools import cache
+from grid_methods import *
 
+'''
+state = (grid, grid_size, cursor)
+car_info = (car_id, car_index, car_length, car_orientation)
+'''
 
 def func_actions(state):
-    map_grid = create_map(state[1])
-    pieces = map_grid[-1]
+    """
+    This function will go through the list of all cars in the current Map, with the goal of determining whether it's
+    possible to move them 1 coordinate up/down (in case they're vertical) or 1 coordinate to the sides
+    (in case they're horizontal). The move is only considered possible if these coordinates are currently free.
 
+    Parameters:
+        - State: (grid, grid_size, cursor) -> Current state of the map
+
+    Returns:
+        A list of all the possible actions. Each action is represented by a tuple containing the info of the car to be
+        moved, and the key corresponding to the direction in which the move will be made (car_info, key).
+    """
+    grid = state[0]
+    grid_size = state[1]
     actlist = []
-    for piece in pieces:
-        piece_coords = piece_coordinates(map_grid, piece)
 
-        orientation = "vertical" if piece_coords[0][0] == piece_coords[1][0] else "horizontal"
-        #print("Piece: " + piece + " " + orientation)
+    # Determining the cars present in the Map
+    cars = set(grid)
+    cars.remove('o')
+    cars.discard('x')
 
-        if orientation == "horizontal":
-            # Andar para a frente
-            if not piece_coords[-1][0] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0] + 1, piece_coords[0][1])):
-                actlist.append((piece, (1, 0)))
+    # Checking the possible actions for each car
+    for car in cars:
+        car_info = get_car_info(state, car)
+        car_index = car_info[1]
+        car_size = car_info[2]
+        car_orientation = car_info[3]
 
-            # Andar para trás
-            if not piece_coords[0][0] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0] - 1, piece_coords[0][1])):
-                actlist.append((piece, (-1, 0)))
+        if car_orientation == 'H':
+            if car_index % grid_size != 0 and grid[car_index - 1] == 'o':
+                actlist.append((car_info, 'a'))
+            if car_index % grid_size + car_size < grid_size and grid[car_index + car_size] == 'o':
+                actlist.append((car_info, 'd'))
         else:
-            # Andar para baixo
-            if not piece_coords[-1][1] == 5 and not is_coord_occupied(map_grid, (piece_coords[-1][0], piece_coords[-1][1] + 1)):
-                actlist.append((piece, (0, 1)))
-
-            # Andar para cima
-            if not piece_coords[0][1] == 0 and not is_coord_occupied(map_grid, (piece_coords[0][0], piece_coords[0][1] - 1)):
-                actlist.append((piece, (0, -1)))
+            if car_index >= grid_size and grid[car_index - grid_size] == 'o':
+                actlist.append((car_info, 'w'))
+            if car_index + car_size * grid_size < grid_size * grid_size and grid[car_index + car_size * grid_size] == 'o':
+                actlist.append((car_info, 's'))
 
     return actlist
 
 
 def func_result(state, action):
-    current_map = create_map(state[1])
-    (piece, movement_vector) = action
+    """
+    This function receives the current state of the Map, as well as an action to be applied to a car in the map, and
+    returns the state of the Map after this action is performed.
 
-    try:
-        current_map = move(current_map, piece, movement_vector)
-    except MapException:
-        return None
+    Parameters:
+        - State: (grid, grid_size, cursor) -> Current state of the map
+        - Action: (car_info, key) -> Car in which the action will be applied, as well as the key describing the direction
+        of the movement.
 
-    return piece, map_to_string(current_map)
+    Returns:
+        A string representing the new State of the map after the move.
+    """
+    grid = state[0]
+    grid_size = state[1]
+    car_info = action[0]
+    movement = action[1]
 
+    car_id = car_info[0]
+    car_index = car_info[1]
+    car_size = car_info[2]
 
-def func_cost(state, action, parent_state):
-    current_map = create_map(state[1])
-    (piece, movement_vector) = action
+    grid_after_move = list(grid)
 
-    # Coordenadas do cursor no inicio da ação
-    cursor_coords = piece_coordinates(current_map, parent_state[0])[0]
-    # Coordenadas da peça no inicio da ação
-    piece_coords = piece_coordinates(current_map, piece)
-
-    cursor_cost = len(move_cursor(cursor_coords, piece_coords)[1])
-
-    return cursor_cost + abs(movement_vector[0] + movement_vector[1]) + 1
-
-
-@cache
-def func_heuristic(state, movement_vector, limit, depth):
-    h_cost = 0
-    blocking_pieces = set()
-
-    if depth >= limit:
-        return float("inf")
-
-    piece_to_move = state[0]
-    current_map = create_map(state[1])
-    piece_coords = piece_coordinates(current_map, piece_to_move)
-    piece_x_coords = [coord[0] for coord in piece_coords]
-    piece_to_move_orientation = "vertical" if len(set(piece_x_coords)) == 1 else "horizontal"
-
-
-    if movement_vector[0] != 0 and movement_vector[0] > 0:
-        # Horizontal a andar para a frente
-        for i in range(piece_coords[-1][0] + 1, piece_coords[-1][0] + movement_vector[0] + 1, 1):
-            blocks = is_occupied(current_map, (i, piece_coords[0][1]))
-            if len(blocks) > 0:
-                blocking_pieces.add(blocks[0])
-            if i > 5 or i < 0:
-                return float("inf")
-    elif movement_vector[0] != 0 and movement_vector[0] < 0:
-        # Horizontal a andar para trás
-        for i in range(piece_coords[0][0] - 1, piece_coords[0][0] - movement_vector[0] - 1, -1):
-            blocks = is_occupied(current_map, (i, piece_coords[0][1]))
-            if len(blocks) > 0:
-                blocking_pieces.add(blocks[0])
-            if i > 5 or i < 0:
-                return float("inf")
-    elif movement_vector[1] != 0 and movement_vector[1] > 0:
-        # Vertical a andar para baixo
-        for i in range(piece_coords[-1][1] + 1, piece_coords[-1][1] + movement_vector[1] + 1, 1):
-            blocks = is_occupied(current_map, (piece_coords[0][0], i))
-            if len(blocks) > 0:
-                blocking_pieces.add(blocks[0])
-            if i > 5 or i < 0:
-                return float("inf")
+    if movement == 'w':
+        grid_after_move[car_index - grid_size] = car_id
+        grid_after_move[car_index + car_size * grid_size - grid_size] = 'o'
+    elif movement == 'a':
+        grid_after_move[car_index - 1] = car_id
+        grid_after_move[car_index + car_size - 1] = 'o'
+    elif movement == 's':
+        grid_after_move[car_index + car_size * grid_size] = car_id
+        grid_after_move[car_index] = 'o'
     else:
-        # Vertical a andar para cima
-        for i in range(piece_coords[0][1] - 1, piece_coords[0][1] - movement_vector[1] - 1, -1):
-            blocks = is_occupied(current_map, (piece_coords[0][0], i))
-            if len(blocks) > 0:
-                blocking_pieces.add(blocks[0])
-            if i > 5 or i < 0:
-                return float("inf")
+        grid_after_move[car_index + car_size] = car_id
+        grid_after_move[car_index] = 'o'
 
-    if len(blocking_pieces) > 0:
-        h_cost += abs(movement_vector[0] + movement_vector[1])
+    return (''.join(grid_after_move), grid_size)
+    
 
-    if "x" in blocking_pieces:
-        return float("inf")
+def func_cost(action, parent_state):
+    moved_car_info = action[0]
+    prev_cursor_coords = parent_state[-1]
 
-    for piece in blocking_pieces:
-        new_piece_coords = piece_coordinates(current_map, piece)
-        new_piece_x_coords = [coord[0] for coord in new_piece_coords]
-        new_piece_y_coords = [coord[1] for coord in new_piece_coords]
-        new_piece_length = len(new_piece_y_coords)
-        orientation = "vertical" if len(set(new_piece_x_coords)) == 1 else "horizontal"
+    # Determining the coordinates of the car before the move
+    car_coords = get_car_coords(moved_car_info, parent_state)
 
-        if orientation == "horizontal" and piece_to_move_orientation == "horizontal":
-            h_cost += func_heuristic((piece, current_map), movement_vector, limit, depth + 1)
-        elif orientation == "horizontal" and piece_to_move_orientation == "vertical":
-            h1 = func_heuristic((piece, current_map), (piece_coords[0][0] - new_piece_coords[0][0]  + 1, 0), limit, depth + 1)
-            h2 = func_heuristic((piece, current_map), (piece_coords[0][0] - (new_piece_coords[0][0] + new_piece_length -1) - 1, 0), limit, depth + 1)
-            h_cost += min(h1, h2)
-        elif orientation == "vertical" and piece_to_move_orientation == "vertical":
-           h_cost += func_heuristic((piece, current_map), movement_vector, limit, depth + 1)
-        else:
-            h1 = func_heuristic((piece, current_map), (piece_coords[0][1] - new_piece_coords[0][1] + 1, 0), limit,
-                                depth + 1)
-            h2 = func_heuristic((piece, current_map),
-                                (piece_coords[0][1] - (new_piece_coords[0][1] + new_piece_length - 1) - 1, 0), limit,
-                                depth + 1)
-            h_cost += min(h1, h2)
+    # Determining in which coordinates the cursor would select the car, before the move
+    closest_coords = min(car_coords,
+                         key=lambda point: math.hypot(prev_cursor_coords[1] - point[1], prev_cursor_coords[0] - point[0]))
 
-    return h_cost
+    # The cost of the movement is the cost of moving the cursor from its position before the move, to the closest coordinates
+    # plus the cost of selecting the piece and the cost of moving the piece by one cell
+    return abs(prev_cursor_coords[0] - closest_coords[0]) + abs(prev_cursor_coords[1] - closest_coords[1]) + 2
+
+
+def func_heuristic(state):
+    grid = state[0]
+    grid_size = state[1]
+
+    # Determining the line of the player car ('A')
+    A_index = grid.index('A')
+
+    # calculate the distance from the player car to the right edge of the map
+    h = grid_size - (A_index % grid_size + 1)
+
+    # subtract the number of empty cells in the line of the player car
+    h -= grid[A_index - A_index % grid_size: A_index - A_index % grid_size + grid_size].count('o')
+
+    return h
+
 
 
 def func_satisfies(state):
-    current_map = create_map(state[1])
+    """
+    This function will verify if the current State of the map already satisfies the conditions to move on to the next
+    level, that is, if the player car ('A') is at the right edge of the map.
 
-    return test_win(current_map)
+    Parameters:
+        - State: (grid, grid_size, cursor) -> Current state of the map
 
+    Returns:
+        True if the car is on the edge of the map, False if not.
+    """
+    grid_size = state[1]
 
+    car_info = get_car_info(state, 'A')
+    car_index = car_info[1]
+
+    # Determining the X coordinate of the player car
+    car_x = car_index % grid_size + 1
+
+    return car_x == grid_size - 1
+
+""" Teste Custos 
+'''  ooooCoooooCoAAooCoooooooooBBBooooooo  '''
+'''  ooooCo
+     ooooCo
+     AAooCo
+     oooooo
+     ooBBBo
+     oooooo
 '''
-class Domain(SearchDomain):
-    def __init__(self):
-        pass
+state = ('ooooCoooooCoAAooCoooooooooBBBooooooo', 6, (0,2))
+actions = func_actions(state)
 
-    def actions(self, state):
-        return func_actions(state)
-
-    def result(self, state, action):
-        return func_result(state, action)
-
-    def cost(self, state, action):
-        pass
-    def heuristic(self, state, goal):
-        pass
-    def satisfies(self, state):
-        return func_satisfies(state)
-'''
-
-''' TESTS '''
-
-
-def print_grid(state):
-    """Prints the map object in an easier to read format"""
-    if state is None:
-        return None
-
-    grid = state
-    raw = ""
-    i = 1
-    for char in grid:
-        raw += char
-        if i % 6 == 0:
-            raw += "\n"
-        i += 1
-    return f"{raw}"
-
-'''
-d = (lambda s: func_actions(s),
-     lambda s, a: func_result(s, a),
-     lambda s, a: func_cost(s, a),
-     lambda s, goal: func_heuristic(s, goal),
-     lambda s: func_satisfies(s))
-grid = ('A', 'oBBCCoooFGHoAAFGHooooGooxoEEoooooooo')
-map_grid = create_map(grid[1])
-print(piece_coordinates(map_grid, "B"))
-print("Initial Grid")
-print(print_grid(grid[1]))
-actList = d[0](grid)
-print(actList)
-
-for a in actList:
-    print("\nPiece " + a[0])
-    print("\nCost: " + str(func_cost((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a, ("G", "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"))))
-    # print("\nHeuristic: " + str(func_heuristic((a[0], "oBBCCoooFGHoAAFGHooooGooxoEEoooooooo"), a[1], 4, 0)))
-    try:
-        piece, newGrid = d[1](grid, a)
-        print(a)
-        print(print_grid(newGrid))
-    except:
-        print("None")
-
-
-o o o o o o 
-o x C C o H
-A A o G o H
-o F o G o o
-o F D D x o
-o o o o o o
-'''
+for a in actions:
+    print(a)
+    res = func_result(state, a)
+    print(res[0])
+    print(func_cost(a, state))
+"""

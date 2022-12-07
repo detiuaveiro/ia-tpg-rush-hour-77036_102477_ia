@@ -1,4 +1,14 @@
-from map_methods import piece_coordinates, create_map
+from grid_methods import *
+
+'''
+car = (car_id, car_index, car_length, car_orientation)
+state = (grid_str, grid_size, cursor)
+node = (state, parentID, depth, cost, heuristic)
+problem = (domain, initial_state)
+domain = func_actions(state), func_result(state,action),
+         func_cost(s,a,p), func_heuristic(s,a,l,d),
+         func_satisfies(state)
+'''
 
 # Arvores de pesquisa
 class SearchTree:
@@ -16,8 +26,14 @@ class SearchTree:
         self.non_terminals = 0
         self.visited = set()
 
-    # obter o caminho (sequencia de estados) da raiz ate um no
+
     def get_path(self, node):
+        """
+        Obtains the path travelled from the root of the tree until a passed node, using a recursion strategy.
+
+        Parameters:
+        - Node: (state, parentID, depth, cost, heuristic)
+        """
         if node[1] is None:
             return [node[0]]
         path = self.get_path(self.all_nodes[node[1]])
@@ -25,65 +41,55 @@ class SearchTree:
 
         return path
 
-    # procurar a solucao
-    def search(self, limit=None):
+
+    def search(self):
+        """
+        Applies the algorithm used to search for the solution.
+        """
         while self.open_nodes:
             nodeID = self.open_nodes.pop(0)
             node = self.all_nodes[nodeID]
             self.closed_nodes.append(nodeID)
-            # Se o nó atual é o objetivo, terminar a pesquisa
-            if self.problem[0][-1](node[0]):                                             # if self.problem.goal_test(node[0]):
+
+            # In case the goal has been achieved
+            if self.problem[0][4](node[0]):
                 self.solution = node
                 self.terminals = len(self.open_nodes) + 1
                 return self.get_path(node)
 
-            # Caso contrário, expandir o nó, determinar os filhos, e adicionar à fila de pesquisa (se não atingirem o limite de profundidade/forem nós repetidos)
             lnewnodes = []
             self.non_terminals += 1
 
-            # procurar as ações possíveis a partir do Nó atualmente a ser expandido
-            for a in self.problem[0][0](node[0]):                                       # for a in self.problem.domain.actions(node.state):
-                # Para cada ação, determina-se o resultado, isto é, o novo nó
-                newstate = self.problem[0][1](node[0], a)                               # newstate = self.problem.domain.result(node.state, a)
-                # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
-                # if not self.in_parent(node, newstate):
-                # verificar se o novo nó não existe já no caminho investigado, para fazer pesquisa em profundidade sem repetição de estados
-                if newstate[1] not in self.visited:
-                    #newnode = SearchNode(newstate, node, node.depth + 1)
-                    map = create_map(newstate[1])
-                    a_coords = piece_coordinates(map, "A")
+            # Expanding a new node for each possible action returned by func_actions, in case the noded has not been
+            # previously visited
+            for action in self.problem[0][0](node[0]):
+                newstate = self.problem[0][1](node[0], action)
 
-                    newnode_heuristic = 0
-                    newnode_cost = self.problem[0][2](newstate, a, node[0])
+                if newstate[0] not in self.visited:
+                    heuristic = 0
 
                     if self.strategy == "greedy" or self.strategy == "a*":
-                        newnode_heuristic = self.problem[0][3](("A", newstate[1]), (map[0] - a_coords[-1][0], 0), 4, 0)
+                        heuristic = self.problem[0][3](newstate)
 
-                    #TODO: Tentar eliminar nós com heuristica demasiado elevada
-                    newnode = (newstate, nodeID, node[2] + 1,node[-2] +  newnode_cost, newnode_heuristic)
+                    newnode = (newstate, nodeID, node[2] + 1, 0, heuristic)
 
-                    if newstate[1] in [self.all_nodes[id][0][1] for id in self.open_nodes] or newstate[1] in [
-                        self.all_nodes[id][0][1] for id in self.closed_nodes]:
-                        # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
-                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0][1] == newstate[1]][0]
+                    lnewnodes.append(len(self.all_nodes))
+                    self.all_nodes.append(newnode)
 
-                        if newnode[3] < self.all_nodes[state_id][3]:
-                            # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
-                            self.all_nodes[state_id] = newnode
-                    
-                    else:
-                        # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
-                        lnewnodes.append(len(self.all_nodes))
-                        self.all_nodes.append(newnode)
-                    
-                    self.visited.add(newstate[1])
+                    self.visited.add(newstate[0])
 
             self.add_to_open(lnewnodes)
-
         return None
 
-    # juntar novos nos a lista de nos abertos de acordo com a estrategia
+
     def add_to_open(self, lnewnodes):
+        """
+        Adds the new nodes expanded on a new iteration of tree_search to the list of open nodes, according to the
+        search strategy employed by student.py.
+
+        Parameters:
+        - lnewnodes: List of new nodes to be appended to open_nodes.
+        """
         if self.strategy == 'breadth':
             self.open_nodes.extend(lnewnodes)
         elif self.strategy == 'depth':
