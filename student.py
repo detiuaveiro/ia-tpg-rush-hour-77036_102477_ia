@@ -20,7 +20,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
             lambda s : func_actions(s),
             lambda s,a : func_result(s,a),
             lambda a,p : func_cost(a,p),
-            lambda s,a,l,d : func_heuristic(s,a,l,d),
+            lambda s : func_heuristic(s),
             lambda s : func_satisfies(s) 
         )
         prev = ""
@@ -49,9 +49,12 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
 
                 if not solved:
                     # Calculate map movements to complete the level
-                    strategy = "breadth"
+                    if grid_size > 6:
+                        strategy = "a*"
+                    else:
+                        strategy = "breadth"
 
-                    initial_state = (grid, grid_size, cursor_coords)
+                    initial_state = (grid, grid_size)
                     problem = (domain, initial_state)
                     tree = tree_search.SearchTree(problem, strategy)
                     solution = tree.search()

@@ -7,17 +7,17 @@ domain = (
             lambda s : func_actions(s),
             lambda s,a : func_result(s,a),
             lambda a,p : func_cost(a,p),
-            lambda s,m,l,d : func_heuristic(s,m,l,d),
+            lambda s : func_heuristic(s),
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("EBBBooEooFooEAAFooooCCoooDDDoooooooo", 6 , (3,3))
+initial_state = ("ooooooooooooCFILooooCFILoooBDGJMAAoBDGJMooooEHKNooooEHKNoooooooo", 8)
 
 problem = (domain, initial_state)
 
 t0 = perf_counter()
 
-tree = SearchTree(problem, "breadth")
+tree = SearchTree(problem, "a*")
 
 moves = tree.search()
 

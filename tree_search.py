@@ -66,33 +66,15 @@ class SearchTree:
                 newstate = self.problem[0][1](node[0], action)
 
                 if newstate[0] not in self.visited:
-                    if self.strategy == "breadth" or self.strategy == "depth":
-                        cost = 0
-                    else:
-                        cost = self.problem[0][2](action, node[0]) +  node[3]
-
                     heuristic = 0
 
                     if self.strategy == "greedy" or self.strategy == "a*":
-                        heuristic = self.problem[0][3](newstate, (get_car_info(newstate, 'A'), 'd'), 4, 0)
+                        heuristic = self.problem[0][3](newstate)
 
-                    newnode = (newstate, nodeID, node[2] + 1, cost, heuristic)
+                    newnode = (newstate, nodeID, node[2] + 1, 0, heuristic)
 
-                    #TODO: Melhorar estes loops, deve haver forma mais eficiente de fazer isto
-                    if newstate[0] in [self.all_nodes[id][0][0] for id in self.open_nodes] or newstate[0] in [
-                        self.all_nodes[id][0][0] for id in self.closed_nodes]:
-                        # Novo estado já está presente num nó do conjunto (ABERTOS U FECHADOS)
-                        state_id = [self.all_nodes.index(node) for node in self.all_nodes if node[0][0] == newstate[0]][
-                            0]
-
-                        if newnode[3] < self.all_nodes[state_id][3]:
-                            # Caso o novo nó tenha melhor custo do que o nó anterior corresponde a este estado
-                            self.all_nodes[state_id] = newnode
-
-                    else:
-                        # Novo estado não está presente em nenhum nó do conjunto (ABERTOS U FECHADOS)
-                        lnewnodes.append(len(self.all_nodes))
-                        self.all_nodes.append(newnode)
+                    lnewnodes.append(len(self.all_nodes))
+                    self.all_nodes.append(newnode)
 
                     self.visited.add(newstate[0])
 
