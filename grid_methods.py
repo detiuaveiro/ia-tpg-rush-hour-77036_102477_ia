@@ -5,7 +5,7 @@ def get_car_info(state, car_id):
     Returns the information that describes a car in the board, in tuple form.
 
     Parameters:
-        - state1: (grid, grid_size, cursor) -> Current state of the map
+        - state1: (grid, grid_size) -> Current state of the map
         - car_id: Character representing the car
 
     Returns: Tuple with car ID, the index of the first appearance of the car in grid, the car size and its orientation.
@@ -41,8 +41,8 @@ def get_moved_car(state1, state2):
     state of the grid and the state of the grid after the move.
 
     Parameters:
-        - state1: (grid, grid_size, cursor) -> State of the map before the move
-        - state2: (grid, grid_size, cursor) -> State of the map after the move
+        - state1: (grid, grid_size) -> State of the map before the move
+        - state2: (grid, grid_size) -> State of the map after the move
 
     Returns: Char represeting the car to be moved
     """
@@ -65,8 +65,8 @@ def get_car_movement(state1, state2, car_id):
     state2, and returns the key corresponding to that direction.
 
     Parameters:
-       - state1: (grid, grid_size, cursor) -> State of the map before the move
-       - state2: (grid, grid_size, cursor) -> State of the map after the move
+       - state1: (grid, grid_size) -> State of the map before the move
+       - state2: (grid, grid_size) -> State of the map after the move
        - car_id: Character representing the car
 
     Returns: Key pressed to move the car in the correct direction
@@ -107,7 +107,7 @@ def get_cursor_move(cursor_coords, state, car_id):
 
     Parameters:
        - cursor_coords: (X,Y) -> Current coordinates of the cursor in the game map
-       - state: (grid, grid_size, cursor) -> Current state of the map
+       - state: (grid, grid_size) -> Current state of the map
        - car_id: Character representing the car to be mvoed by the Agent in the next game move
 
     Returns: Key pressed to move the cursor in the correct direction
@@ -141,7 +141,7 @@ def get_car_coords(car_info, state):
 
     Parameters:
        - car_info: (car_id, car_index, car_size, car_orientation) -> Tuple representing the car
-       - state: (grid, grid_size, cursor) -> Current state of the map
+       - state: (grid, grid_size) -> Current state of the map
 
     Returns: List containing all the coordinates the car occupies, in tuple form (X,Y)
     """

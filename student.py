@@ -50,7 +50,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 if not solved:
                     # Calculate map movements to complete the level
                     if grid_size > 6:
-                        strategy = "a*"
+                        strategy = "greedy"
                     else:
                         strategy = "breadth"
 

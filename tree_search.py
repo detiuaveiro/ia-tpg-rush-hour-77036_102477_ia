@@ -2,11 +2,11 @@ from grid_methods import *
 
 '''
 car = (car_id, car_index, car_length, car_orientation)
-state = (grid_str, grid_size, cursor)
+state = (grid_str, grid_size)
 node = (state, parentID, depth, cost, heuristic)
 problem = (domain, initial_state)
 domain = func_actions(state), func_result(state,action),
-         func_cost(s,a,p), func_heuristic(s,a,l,d),
+         func_cost(s,p), func_heuristic(s),
          func_satisfies(state)
 '''
 
@@ -18,7 +18,6 @@ class SearchTree:
         self.problem = problem
         root = (self.problem[1], None, 0, 0, 0)
         self.open_nodes = [0]
-        self.closed_nodes = []
         self.all_nodes = [root]
         self.strategy = strategy
         self.solution = None
@@ -49,7 +48,6 @@ class SearchTree:
         while self.open_nodes:
             nodeID = self.open_nodes.pop(0)
             node = self.all_nodes[nodeID]
-            self.closed_nodes.append(nodeID)
 
             # In case the goal has been achieved
             if self.problem[0][4](node[0]):
@@ -94,10 +92,6 @@ class SearchTree:
             self.open_nodes.extend(lnewnodes)
         elif self.strategy == 'depth':
             self.open_nodes[:0] = lnewnodes
-        elif self.strategy == 'uniform':
-            self.open_nodes.extend(lnewnodes)
-            # self.open_nodes.sort(key=lambda n: n.cost)
-            self.open_nodes.sort(key=lambda n: self.all_nodes[n][3])
         elif self.strategy == 'greedy':
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic)

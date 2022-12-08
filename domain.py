@@ -1,7 +1,7 @@
 from grid_methods import *
 
 '''
-state = (grid, grid_size, cursor)
+state = (grid, grid_size)
 car_info = (car_id, car_index, car_length, car_orientation)
 '''
 
@@ -12,7 +12,7 @@ def func_actions(state):
     (in case they're horizontal). The move is only considered possible if these coordinates are currently free.
 
     Parameters:
-        - State: (grid, grid_size, cursor) -> Current state of the map
+        - State: (grid, grid_size) -> Current state of the map
 
     Returns:
         A list of all the possible actions. Each action is represented by a tuple containing the info of the car to be
@@ -54,7 +54,7 @@ def func_result(state, action):
     returns the state of the Map after this action is performed.
 
     Parameters:
-        - State: (grid, grid_size, cursor) -> Current state of the map
+        - State: (grid, grid_size) -> Current state of the map
         - Action: (car_info, key) -> Car in which the action will be applied, as well as the key describing the direction
         of the movement.
 
@@ -88,23 +88,72 @@ def func_result(state, action):
     return (''.join(grid_after_move), grid_size)
     
 
-def func_cost(action, parent_state):
-    moved_car_info = action[0]
-    prev_cursor_coords = parent_state[-1]
+def func_cost(state, parent_state):
+    """
+    This function is used to calculate the cost of an action, by considering two sub-costs: the cost of moving the cursor
+    from its previous position to the piece moved in the current action, and the cost of moving the piece itself.
 
-    # Determining the coordinates of the car before the move
-    car_coords = get_car_coords(moved_car_info, parent_state)
+    This function is deprecated in the current version of the program, which uses the breadth and the greedy algorithms to
+     search for a solution, as it was verified that considering the cost always increases the speed of the tree search by
+     0.1-0.5 seconds. Thus, this function considers a different deprecated representation of state, in which the ID of the
+     moved car is saved.
 
-    # Determining in which coordinates the cursor would select the car, before the move
-    closest_coords = min(car_coords,
-                         key=lambda point: math.hypot(prev_cursor_coords[1] - point[1], prev_cursor_coords[0] - point[0]))
+    Parameters:
+        - State: (grid, grid_size, moved_car) -> Current state of the map
+        - Parent_State: (grid, grid_size, moved_car) -> Previous state of the map. The moved_car is thus the car that was
+        moved in the previous move of the agent.
 
-    # The cost of the movement is the cost of moving the cursor from its position before the move, to the closest coordinates
-    # plus the cost of selecting the piece and the cost of moving the piece by one cell
-    return abs(prev_cursor_coords[0] - closest_coords[0]) + abs(prev_cursor_coords[1] - closest_coords[1]) + 2
+    Returns:
+        The cost of the current action by the Agent
+    """
+    moved_car = state[-1]
+    prev_car = parent_state[-1]
+
+    grid_before_move = parent_state[0]
+    grid_after_move = state[0]
+
+    grid_size = state[1]
+
+    # Map of the previous state - used to determine the initial coordinates of the moved car, and to determine the
+    # cost of moving the cursor from its position at the end of the previous move, to the car to be moved in the current
+    # move
+    moved_car_index = grid_before_move.index(moved_car)
+    x_moved_car = moved_car_index % grid_size
+    y_moved_car = moved_car_index // grid_size
+
+    if prev_car is not None:
+        prev_car_index = grid_before_move.index(prev_car)
+        x_prev_car = prev_car_index % grid_size
+        y_prev_car = prev_car_index // grid_size
+        cursor_cost = abs(x_prev_car - x_moved_car) + (y_moved_car - y_prev_car)
+    else:
+        cursor_cost = 0
+
+    # Current map - used to determine the final coordinates of the moved car after the move, and thus to determine the
+    # cost of moving it from its initial position to the final position
+    moved_car_new_index = grid_after_move.index(moved_car)
+
+    new_x_moved_car = moved_car_new_index % grid_size
+    new_y_moved_car = moved_car_new_index // grid_size
+
+    car_movement_cost = abs(x_moved_car - new_x_moved_car) + (y_moved_car - new_y_moved_car)
+
+    return cursor_cost + car_movement_cost
 
 
 def func_heuristic(state):
+    """
+        This function implements the heuristic used in the Greedy and A* search algorithms applied on the project.
+        In this heuristic, the process starts by checking the distance the player car is from the edge of the map, with
+        each tile representing 1 heuristic cost. Afterwards, the function verifies how many cars are in the tiles corresponding
+        to the line the player car is in, with each car counting as 1 additional heuristic cost.
+
+        Parameters:
+            - State: (grid, grid_size) -> Current state of the map
+
+        Returns:
+            The heuristic cost of the current state.
+    """
     grid = state[0]
     grid_size = state[1]
 
@@ -127,7 +176,7 @@ def func_satisfies(state):
     level, that is, if the player car ('A') is at the right edge of the map.
 
     Parameters:
-        - State: (grid, grid_size, cursor) -> Current state of the map
+        - State: (grid, grid_size) -> Current state of the map
 
     Returns:
         True if the car is on the edge of the map, False if not.
@@ -141,22 +190,3 @@ def func_satisfies(state):
     car_x = car_index % grid_size + 1
 
     return car_x == grid_size - 1
-
-""" Teste Custos 
-'''  ooooCoooooCoAAooCoooooooooBBBooooooo  '''
-'''  ooooCo
-     ooooCo
-     AAooCo
-     oooooo
-     ooBBBo
-     oooooo
-'''
-state = ('ooooCoooooCoAAooCoooooooooBBBooooooo', 6, (0,2))
-actions = func_actions(state)
-
-for a in actions:
-    print(a)
-    res = func_result(state, a)
-    print(res[0])
-    print(func_cost(a, state))
-"""
