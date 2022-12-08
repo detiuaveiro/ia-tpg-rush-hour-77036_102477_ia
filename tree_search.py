@@ -106,10 +106,3 @@ class SearchTree:
             self.open_nodes.extend(lnewnodes)
             # self.open_nodes.sort(key=lambda n: n.heuristic + n.cost)
             self.open_nodes.sort(key=lambda n: self.all_nodes[n][3] + self.all_nodes[n][4])
-
-    def in_parent(self, node, state):
-        if node[1] is None:
-            return False
-        if self.all_nodes[node[1]][0] == state:
-            return True
-        return self.in_parent(self.all_nodes[node[1]], state)
