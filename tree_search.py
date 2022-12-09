@@ -21,8 +21,6 @@ class SearchTree:
         self.all_nodes = [root]
         self.strategy = strategy
         self.solution = None
-        self.terminals = 0
-        self.non_terminals = 0
         self.visited = set()
 
 
@@ -52,11 +50,9 @@ class SearchTree:
             # In case the goal has been achieved
             if self.problem[0][4](node[0]):
                 self.solution = node
-                self.terminals = len(self.open_nodes) + 1
                 return self.get_path(node)
 
             lnewnodes = []
-            self.non_terminals += 1
 
             # Expanding a new node for each possible action returned by func_actions, in case the noded has not been
             # previously visited

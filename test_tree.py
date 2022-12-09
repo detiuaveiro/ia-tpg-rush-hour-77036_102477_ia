@@ -11,13 +11,13 @@ domain = (
             lambda s : func_satisfies(s) 
         )
     
-initial_state = ("ooooooooooooCFILooooCFILoooBDGJMAAoBDGJMooooEHKNooooEHKNoooooooo", 8)
+initial_state = ("ooxLCCoooLDDAAKoooIJKEENIJFFMNGGHHMN", 6)
 
 problem = (domain, initial_state)
 
 t0 = perf_counter()
 
-tree = SearchTree(problem, "a*")
+tree = SearchTree(problem, "breadth")
 
 moves = tree.search()
 

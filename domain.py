@@ -181,10 +181,10 @@ def func_satisfies(state):
     Returns:
         True if the car is on the edge of the map, False if not.
     """
+    grid = state[0]
     grid_size = state[1]
 
-    car_info = get_car_info(state, 'A')
-    car_index = car_info[1]
+    car_index = grid.index('A')
 
     # Determining the X coordinate of the player car
     car_x = car_index % grid_size + 1
