@@ -3,7 +3,7 @@ Projecto de Inteligência Artificial 2022 - Rush Hour
 
 ## Context
 
-The goal of this project, done for the subject Inteligência Artificial at Universidade de Aveiro, was to program an AI Bot with tree search algorithms to solve the Rush Hour game. More details with the algorithms used and results can be found in the file **report.pdf**.
+The goal of this project, done for the subject Inteligência Artificial at Universidade de Aveiro, was to program an AI Bot with tree search algorithms to solve the Rush Hour game. More details with the algorithms used and results can be found in **report.pdf**.
 
 ## Development Team
 
